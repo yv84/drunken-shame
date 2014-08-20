@@ -1,0 +1,5 @@
+-r common.txt
+coverage==3.7.1
+requests==2.1.0
+selenium==2.39.0
+django-debug-toolbar
