@@ -5,5 +5,8 @@ from django.test import TestCase
 
 class SmokeTest(TestCase):
 
+    def test_home_url(self):
+        found = resolve('/')
+
     def test_admin_url(self):
         found = resolve('/admin/')
