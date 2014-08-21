@@ -1,0 +1,32 @@
+{% extends '_layouts/base.html' %}
+{% load crispy_forms_tags %}
+
+
+{% block css %}
+ <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+ {% endblock css %}
+
+{% block title %}
+Create | User | {{ block.super }}
+{% endblock title %}
+
+{% block headline %}
+<h1>Create</h1>
+<h2>Your User</h2>
+{% endblock headline %}
+
+{% block content %}
+{% crispy form %}
+{% endblock content %}
+
+{% block js %}
+<script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+<script>
+$(document).ready(function() {
+    $('.dateinput').datepicker({
+      format: "dd/mm/yyyy",
+      changeMonth: true,
+        changeYear: true
+    });
+});</script>
+{% endblock js %}

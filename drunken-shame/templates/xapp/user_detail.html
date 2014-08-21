@@ -10,5 +10,5 @@
 <h3>{{ object|field_name:"name" }}: {{ object.name }}</h3>
 <p>{{ object|field_name:"paycheck" }} = {{ object.paycheck }}</p>
 <p>{{ object|field_name:"date_joined" }}: {{ object.date_joined }}</p>
-<p><a href="{% url 'xapp:user:list' %}">&larr; User list</a></p>
+<p><a href="{% url 'xapp:user:list' %}">&larr; {{ list_verbose_name }} список</a></p>
 {% endblock content %}

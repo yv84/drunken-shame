@@ -1,0 +1,17 @@
+{% extends "_layouts/base.html" %}
+{% load url from future %}
+{% load xapp_extras %}
+
+{% block headline %}
+<h2>{{ list_verbose_name }}<h2>
+{% endblock headline %}
+
+{% block content %}
+{% for field_name in field_names_list %}
+{% if field_name != "id" %}
+<p>{{ object|field_name:field_name }} = {{ object|field_value:field_name }}</p>
+{% endif %}
+{% endfor %}
+<p><a href="{% url 'xapp:room:list' %}">
+    &larr; {{ list_verbose_name }} список</a></p>
+{% endblock content %}
