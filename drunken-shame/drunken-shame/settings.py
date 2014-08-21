@@ -36,6 +36,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # If you're using Django 1.6.x or earlier
+    'debug_toolbar',
     'crispy_forms',
     'south',
     'xapp',

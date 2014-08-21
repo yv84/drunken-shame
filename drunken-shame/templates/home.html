@@ -1,11 +1,11 @@
 {% extends '_layouts/base.html' %}
-{% block headline %}<h1>Веб приложение</h1>
-{% endblock %}
+{% block headline %}<h1>Веб приложение</h1>{% endblock %}
 
 
 {% block content %}
 <p>{% if user.is_authenticated %} Вы вошли как: {{user.username }}
 {% else %}{% endif %}
 </p>
-
+<p><p><a href="{% url 'xapp:room:list' %}">&rarr; Room list</a></p></p>
+<p><p><a href="{% url 'xapp:user:list' %}">&rarr; User list</a></p></p>
 {% endblock content %}

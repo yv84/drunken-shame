@@ -9,6 +9,6 @@ urlpatterns = patterns('',
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^', include('xapp.urls', namespace='xapp',)),
     url(r'^auth/', include('accounts.urls', namespace='accounts',)),
+    url(r'^', include('xapp.urls', namespace='xapp',)),
 )

@@ -1,0 +1,17 @@
+{% extends "_layouts/base.html" %}
+{% load url from future %}
+
+{% block headline %}
+<h2>{{ list_verbose_name }}<h2>
+{% endblock headline %}
+
+{% block content %}
+<ul>
+    {% for room in room_list %}
+    <li><a href="{{ room.get_absolute_url }}">{{ room.department }}</a></li>
+    {% empty %}
+    <li>{{ list_verbose_name }} не найдено</li>
+    {% endfor %}
+</ul>
+<p><a href="{% url 'xapp:xapp:home' %}">&larr; Home</a></p>
+{% endblock content %}

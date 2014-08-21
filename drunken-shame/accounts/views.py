@@ -14,7 +14,7 @@ class SignUpView(generic.CreateView):
 
 class LoginView(generic.FormView):
     form_class = LoginForm
-    success_url = reverse_lazy('accounts:login')
+    success_url = reverse_lazy('xapp:xapp:home')
     template_name = 'accounts/login.html'
 
     def form_valid(self, form):
@@ -30,7 +30,7 @@ class LoginView(generic.FormView):
 
 
 class LogoutView(generic.RedirectView):
-    url = reverse_lazy('accounts:login')
+    url = reverse_lazy('xapp:xapp:home')
 
     def get(self, request, *args, **kwargs):
         logout(request)

@@ -5,6 +5,8 @@ from __future__ import (absolute_import, division,
 from datetime import date
 
 from django.db import models
+from django.core.urlresolvers import reverse
+from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext as _
 
 
@@ -14,11 +16,14 @@ class Room(models.Model):
         verbose_name_plural = _(u'Комнаты')
 
     department = models.CharField(max_length=100,
-        help_text = _(u"Отдел"),)
-    spots = models.IntegerField(help_text=_(u"Вместимость"))
+        verbose_name = _(u"Отдел"),)
+    spots = models.IntegerField(verbose_name=_(u"Вместимость"))
 
     def __str__(self):
         return u"{0}".format(self.department)
+
+    def get_absolute_url(self):
+        return reverse('xapp:room:detail', kwargs={'pk': self.pk})
 
 
 class User(models.Model):
@@ -26,10 +31,17 @@ class User(models.Model):
         verbose_name = _(u'Пользователь')
         verbose_name_plural = _(u'Пользователи')
 
-    name = models.CharField(max_length=100, help_text = _(u"Имя"))
-    paycheck = models.IntegerField(help_text = _(u"Зарплата"))
+    name = models.CharField(max_length=100, verbose_name = _(u"Имя"))
+    paycheck = models.IntegerField(verbose_name=_("Зарплата"))
     date_joined = models.DateField(auto_now=False, auto_now_add=False,
-        help_text = _(u"Дата поступления на работу"),)
+        verbose_name = _(u"Дата поступления на работу"),)
 
     def __str__(self):
         return u"{0}".format(self.name)
+
+    @staticmethod
+    def field_name(cls, field):
+        return User._meta.get_field(field).verbose_name
+
+    def get_absolute_url(self):
+        return reverse('xapp:user:detail', kwargs={'pk': self.pk})
