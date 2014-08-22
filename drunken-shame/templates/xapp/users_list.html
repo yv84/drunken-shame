@@ -10,8 +10,9 @@
     {% for user in users_list %}
     <li><a href="{{ user.get_absolute_url }}">{{ user.name }}</a></li>
     {% empty %}
-    <li>{{ list_verbose_name }} не нйдено</li>
+    <li>{{ list_verbose_name }} не найдено</li>
     {% endfor %}
 </ul>
+<p><a href="{% url 'xapp:user:create' %}">&larr; Создать {{ list_verbose_name }}</a></p>
 <p><a href="{% url 'xapp:xapp:home' %}">&larr; Home</a></p>
 {% endblock content %}

@@ -2,14 +2,23 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
+import os
+import sys
 from datetime import date
 
+import yaml
+
+
 from django.db import models
+from django.db.models.loading import cache
 from django.core.urlresolvers import reverse
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext as _
 
-class ModelFunc(object):
+from django.conf import settings
+
+
+class ModelFuncMixin(object):
     def __str__(self):
         return u"{0}".format(self._meta.fields[1].value_to_string(self))
 
@@ -21,7 +30,7 @@ class ModelFunc(object):
         return reverse('xapp:user:detail', kwargs={'pk': self.pk})
 
 
-class YamlTypes():
+class CustomModelTypes(object):
 
     @staticmethod
     def int(value):
@@ -37,7 +46,6 @@ class YamlTypes():
         return models.DateField(auto_now=False, auto_now_add=False,
             verbose_name = _(value),)
 
-
     yaml_types = {
         'char': 'CharField',
         'int': 'IntegerField',
@@ -45,28 +53,61 @@ class YamlTypes():
     }
 
 
-class Users(ModelFunc, models.Model):
-    class Meta:
-        verbose_name = _(u'Пользователи')
-        verbose_name_plural = _(u'Пользователи')
-
-    name = models.CharField(max_length=100, verbose_name = _(u"Имя"))
-    paycheck = models.IntegerField(verbose_name=_("Зарплата"))
-    date_joined = models.DateField(auto_now=False, auto_now_add=False,
-        verbose_name = _(u"Дата поступления на работу"),)
+u_p23 = lambda s: s.decode('utf-8') if settings.PYTHON_VERSION_INFO == 3 else s
 
 
-class Rooms(ModelFunc, models.Model):
-    class Meta:
-        verbose_name = _(u'Комнаты')
-        verbose_name_plural = _(u'Комнаты')
+class ModelGenerator():
+    def __init__(self, file, serializer):
+        self.file = file
+        self.serializer = serializer
 
-    department = models.CharField(max_length=100,
-        verbose_name = _(u"Отдел"),)
-    spots = models.IntegerField(verbose_name=_(u"Вместимость"))
+    def __iter__(self):
+        self.app = __name__
+        if self.serializer == 'yaml':
+            try:
+                self.schema = yaml.load(open(
+                    os.path.join(settings.BASE_DIR,self.file)))
+            except Exception as e:
+                print(e)
+        else:
+            raise Exception('unknown serializer')
+        return self
 
+    def __next__(self):
+        return self.next()
+
+    def next(self):
+        while self.schema:
+            schema = self.schema.popitem()
+            table_name = schema[0].capitalize()
+
+            class Meta:
+                verbose_name = _(schema[1]['title'])
+
+            table_name = table_name
+            attrs = {
+                u_p23(b'Meta'): Meta,
+                u_p23(b'__module__'): __name__,
+            }
+            for field in schema[1]['fields']:
+                attrs.update({field['id']:
+                    getattr(CustomModelTypes, field['type'])(field['title'])})
+
+            try:
+                del cache.app_models[self.app][table_name]
+            except KeyError:
+                pass
+
+            Model = type(table_name, (ModelFuncMixin, models.Model,), attrs)
+
+            setattr(sys.modules[__name__], table_name, Model)
+            #globals()[table] = Model
+
+            return Model
+        raise StopIteration
 
 
 tables = []
-tables.append(Users)
-tables.append(Rooms)
+for model in ModelGenerator(os.path.join(
+            settings.BASE_DIR, 'model.yaml') , 'yaml'):
+    tables.append(model)

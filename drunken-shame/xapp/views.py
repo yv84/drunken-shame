@@ -1,4 +1,5 @@
 from django.views import generic
+from django.core.urlresolvers import reverse
 
 from .models import (
     Rooms,
@@ -9,7 +10,7 @@ from .forms import (
     UsersForm,
 )
 
-class ListVerboseName():
+class ListVerboseName(object):
     def get_context_data(self, **kwargs):
         context = super(ListVerboseName, self).get_context_data(**kwargs)
         context['list_verbose_name'] = self.model._meta.verbose_name
