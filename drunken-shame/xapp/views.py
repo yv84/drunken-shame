@@ -1,12 +1,12 @@
 from django.views import generic
 
 from .models import (
-    Room,
-    User,
+    Rooms,
+    Users,
 )
 from .forms import (
-    RoomForm,
-    UserForm,
+    RoomsForm,
+    UsersForm,
 )
 
 class ListVerboseName():
@@ -21,34 +21,38 @@ class HomeView(generic.TemplateView):
     template_name = "home.html"
 
 
-class RoomListView(ListVerboseName, generic.ListView):
-    model = Room
+class RoomsListView(ListVerboseName, generic.ListView):
+    model = Rooms
 
 
-class RoomDetailView(ListVerboseName, generic.DetailView):
-    model = Room
+class RoomsDetailView(ListVerboseName, generic.DetailView):
+    model = Rooms
 
 
-class RoomCreateView(generic.CreateView):
-    form_class = RoomForm
-    model = Room
+class RoomsCreateView(generic.CreateView):
+    form_class = RoomsForm
+    model = Rooms
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
         self.object.save()
-        return super(RoomCreateView, self).form_valid(form)
+        return super(RoomsCreateView, self).form_valid(form)
 
 
 
-class UserListView(ListVerboseName, generic.ListView):
-    model = User
+class UsersListView(ListVerboseName, generic.ListView):
+    model = Users
 
 
-class UserDetailView(ListVerboseName, generic.DetailView):
-    model = User
-    template_name = "xapp/user_detail.html"
+class UsersDetailView(ListVerboseName, generic.DetailView):
+    model = Users
+    template_name = "xapp/Users_detail.html"
 
 
-class UserCreateView(generic.CreateView):
-    form_class = UserForm
-    model = User
+class UsersCreateView(generic.CreateView):
+    form_class = UsersForm
+    model = Users
+
+    def form_invalid(self, form):
+        response = super(UsersCreateView, self).form_invalid(form)
+        return response

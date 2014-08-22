@@ -10,25 +10,16 @@ from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext as _
 
 
-class Room(models.Model):
+yaml_types = {
+    'char': 'CharField',
+    'int': 'IntegerField',
+    'date': 'DateField',
+}
+
+
+class Users(models.Model):
     class Meta:
-        verbose_name = _(u'Комната')
-        verbose_name_plural = _(u'Комнаты')
-
-    department = models.CharField(max_length=100,
-        verbose_name = _(u"Отдел"),)
-    spots = models.IntegerField(verbose_name=_(u"Вместимость"))
-
-    def __str__(self):
-        return u"{0}".format(self.department)
-
-    def get_absolute_url(self):
-        return reverse('xapp:room:detail', kwargs={'pk': self.pk})
-
-
-class User(models.Model):
-    class Meta:
-        verbose_name = _(u'Пользователь')
+        verbose_name = _(u'Пользователи')
         verbose_name_plural = _(u'Пользователи')
 
     name = models.CharField(max_length=100, verbose_name = _(u"Имя"))
@@ -45,3 +36,25 @@ class User(models.Model):
 
     def get_absolute_url(self):
         return reverse('xapp:user:detail', kwargs={'pk': self.pk})
+
+
+class Rooms(models.Model):
+    class Meta:
+        verbose_name = _(u'Комнаты')
+        verbose_name_plural = _(u'Комнаты')
+
+    department = models.CharField(max_length=100,
+        verbose_name = _(u"Отдел"),)
+    spots = models.IntegerField(verbose_name=_(u"Вместимость"))
+
+    def __str__(self):
+        return u"{0}".format(self.department)
+
+    def get_absolute_url(self):
+        return reverse('xapp:room:detail', kwargs={'pk': self.pk})
+
+
+
+tables = []
+tables.append(Users)
+tables.append(Rooms)
