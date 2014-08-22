@@ -7,7 +7,7 @@
 
 {% block content %}
 <ul>
-    {% for room in room_list %}
+    {% for room in rooms_list %}
     <li><a href="{{ room.get_absolute_url }}">{{ room.department }}</a></li>
     {% empty %}
     <li>{{ list_verbose_name }} не найдено</li>
