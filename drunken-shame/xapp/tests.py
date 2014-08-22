@@ -53,6 +53,6 @@ class ModelTest(TestCase):
                 self.assertEqual(model_field.name, yaml_field['id'])
                 self.assertEqual(model_field.verbose_name, yaml_field['title'])
 
-                from xapp.models import yaml_types
+                from xapp.models import YamlTypes
                 self.assertEqual(model_field.__class__.__name__,
-                    yaml_types[yaml_field['type']])
+                    YamlTypes.yaml_types[yaml_field['type']])

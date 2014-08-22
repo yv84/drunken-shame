@@ -46,7 +46,7 @@ class UsersListView(ListVerboseName, generic.ListView):
 
 class UsersDetailView(ListVerboseName, generic.DetailView):
     model = Users
-    template_name = "xapp/Users_detail.html"
+    template_name = "xapp/users_detail.html"
 
 
 class UsersCreateView(generic.CreateView):
