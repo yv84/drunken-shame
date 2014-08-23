@@ -1,0 +1,72 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>{% block title %}Web приложение на django{% endblock title %}</title>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+  <style>
+
+  </style>
+</head>
+<body>
+  <section id="sheet_name">
+  </section>
+  <hr>
+  <section id="sheet_field">
+  </section>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <script>
+
+  </script>
+  <script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+  <script>
+  var location_href = window.location.href;
+  // console.log(location_href)
+  // console.log(location_href+"{% url 'xapp:api-models:list' %}")
+// $(document).ready(function() {
+get_cheets = $.get( "{% url 'xapp:api-models:list' %}", function( data ) {
+  console.log(data);
+  $("#sheet_name").unbind().find('div').remove();
+  _.each([data[0][0], data[0][1]], function(element, index, sheets) {
+    console.log(element, index);
+    $("#sheet_name").append('<div/>');
+    $("#sheet_name>div").last()
+      .append(element[1])
+      .on('click', function(e) {
+        return get_fields(element[0]);
+      });
+  });
+});
+get_fields = function( url ) {
+  $.get(url, function( data ) {
+    $("#sheet_field").unbind().find('table').remove()
+    $("#sheet_field").append('<table/>')
+    $("#sheet_field>table").append('<th/>');
+    for(var element in data[0]) {
+      $("#sheet_field>table>th").append('<td/>');
+      $("#sheet_field>table>th>td:last").text(element)
+    };
+    _.each(data, function(elements, index, sheets) {
+      $("#sheet_field>table").append('<tr/>');
+      console.log(elements);
+      for(var element in elements) {
+        console.log(element);
+        $("#sheet_field>table>tbody>tr:last").last().append('<td/>');
+        $("#sheet_field>table>tbody>tr:last>td:last").text(elements[element])
+
+          // .on('click', function(e) {
+          //   console.log(this, e);
+          // });
+      };
+    });
+  });
+};
+$(document).ready(function() {
+    $('.dateinput').datepicker({
+      format: "yyyy-mm-dd",
+      changeMonth: true,
+        changeYear: true
+    });
+  });</script>
+</body>
+</html>

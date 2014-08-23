@@ -42,7 +42,18 @@ class ModelFuncMixin(object):
         for table in tables:
             url_name = ''.join([app_module, ':', 'api',
                 ':', table.__name__.lower(), "-list"])
-            sheets.append([reverse(url_name), table._meta.verbose_name])
+            local_fields = []
+            for field in table._meta.local_fields:
+                local_fields.append([
+                field.db_type \
+                    .__str__().replace('<bound method ','') \
+                    [:table._meta.local_fields[1]\
+                        .db_type.__str__()\
+                        .replace('<bound method ','').find('.')],
+                field.verbose_name,
+                field.column,])
+            sheets.append([reverse(url_name), table._meta.verbose_name,
+                local_fields])
         return sheets
 
 

@@ -31,7 +31,7 @@ list_models_patterns = patterns('',
 )
 
 urlpatterns += (
-    url(r'^api/', include(list_models_patterns, namespace='api:models')),
+    url(r'^api/', include(list_models_patterns, namespace='api-models')),
     url(r'^api/', include(router.urls, namespace='api')),
 )
 

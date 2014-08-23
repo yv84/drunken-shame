@@ -59,7 +59,7 @@ class ListVerboseName(object):
 
 
 class HomeView(generic.TemplateView):
-    template_name = "home.html"
+    template_name = "rest_template.html"
 
 
 class RoomsListView(ListVerboseName, generic.ListView):
