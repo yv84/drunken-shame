@@ -4,9 +4,39 @@ from django.conf.urls import patterns, include, url
 from rest_framework import viewsets, routers
 
 from . import views
-from .models import app_module, tables
+from .models import app_module, u_p23, tables
 
 
+urlpatterns = patterns('',)
+
+app_url = sys.modules[__name__]
+
+#-------------REST app-----------
+
+# Routers provide an easy way of automatically determining the URL conf.
+router = routers.DefaultRouter()
+
+# ViewSets define the view behavior.
+for table in tables:
+    table_name = table.__name__
+    attrs = {
+        u_p23(b'__module__'): __name__,
+        u_p23(b'model'): table,
+    }
+    ViewSet = type(''.join([table_name, 'ViewSet']),
+        (viewsets.ModelViewSet,), attrs)
+
+    setattr(app_url, table_name, ViewSet)
+    router.register(table_name, getattr(app_url, table_name))
+
+# Wire up our API using automatic URL routing.
+# Additionally, we include login URLs for the browseable API.
+urlpatterns += (
+    url(r'^app/', include(router.urls)),
+    url(r'^api/', include('rest_framework.urls', namespace='rest_framework')),
+)
+
+#---------Class based app--------
 home_patterns = patterns('',
     url(r'^$', views.HomeView.as_view(), name='home'),
 )
@@ -20,31 +50,21 @@ generic_crud_pattern = lambda table: patterns('',
         ''.join([table,'DetailView'])).as_view(), name="detail"),
 )
 
-setattr(sys.modules[__name__], 'xapp_patterns', home_patterns)
+setattr(app_url, 'xapp_patterns', home_patterns)
 
-urlpatterns = patterns('',
-    url(r'^', include(xapp_patterns, namespace=app_module)),
-)
 for table in tables:
     table_name = table.__name__.lower()
-    setattr(sys.modules[__name__],
+    setattr(app_url,
         ''.join([table_name,'_patterns']),
         generic_crud_pattern(table_name.capitalize()))
 
     urlpatterns += (
         url(r''.join([r'^', table_name, r'/']),
-            include(getattr(sys.modules[__name__],
+            include(getattr(app_url,
                 ''.join([table_name,'_patterns'])),
             namespace=table_name)),
     )
 
-# print(tables_patterns)
-# import pdb; pdb.set_trace()
-
-
-
-# urlpatterns = patterns(tables_patterns) + patterns('',
-#     url(r'^rooms/', include(rooms_patterns, namespace='rooms')),
-#     url(r'^users/', include(users_patterns, namespace='users')),
-  # url(r'^', include(xapp_patterns, namespace=app_module)),
-# )
+urlpatterns += (
+    url(r'^', include(xapp_patterns, namespace=app_module)),
+)

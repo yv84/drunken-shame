@@ -98,7 +98,6 @@ class ModelGenerator():
             verbose_name = _(schema[1]['title'])
             verbose_name_plural = _(schema[1]['title'])
 
-        table_name = table_name
         attrs = {
             u_p23(b'Meta'): Meta,
             u_p23(b'__module__'): __name__,
