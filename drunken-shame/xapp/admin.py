@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import Rooms, Users
+from .models import tables
 
-admin.site.register(Rooms)
-admin.site.register(Users)
+
+for model in tables:
+    admin.site.register(model)

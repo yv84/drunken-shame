@@ -5,6 +5,7 @@ import os
 
 import yaml
 
+from django.utils.six.moves import zip
 from django.core.urlresolvers import resolve
 from django.test import TestCase
 
@@ -12,11 +13,6 @@ from django.conf import settings
 
 # Create your tests here.
 
-# try:
-#     from itertools import izip as zip
-# except ImportError: # will be 3.x series
-#     pass
-from django.utils.six.moves import zip
 
 
 

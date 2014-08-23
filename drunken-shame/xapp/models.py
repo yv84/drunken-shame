@@ -22,7 +22,7 @@ class ModelFuncMixin(object):
     def __str__(self):
         return u"{0}".format(self._meta.fields[1].value_to_string(self))
 
-    @staticmethod
+    @classmethod
     def field_name(cls, field):
         return User._meta.get_field(field).verbose_name
 
@@ -63,14 +63,7 @@ class ModelGenerator():
 
     def __iter__(self):
         self.app = __name__
-        if self.serializer == 'yaml':
-            try:
-                self.schema = yaml.load(open(
-                    os.path.join(settings.BASE_DIR,self.file)))
-            except Exception as e:
-                print(e)
-        else:
-            raise Exception('unknown serializer')
+        self.schema = self.get_model_specification()
         return self
 
     def __next__(self):
@@ -79,32 +72,48 @@ class ModelGenerator():
     def next(self):
         while self.schema:
             schema = self.schema.popitem()
-            table_name = schema[0].capitalize()
-
-            class Meta:
-                verbose_name = _(schema[1]['title'])
-
-            table_name = table_name
-            attrs = {
-                u_p23(b'Meta'): Meta,
-                u_p23(b'__module__'): __name__,
-            }
-            for field in schema[1]['fields']:
-                attrs.update({field['id']:
-                    getattr(CustomModelTypes, field['type'])(field['title'])})
-
-            try:
-                del cache.app_models[self.app][table_name]
-            except KeyError:
-                pass
-
-            Model = type(table_name, (ModelFuncMixin, models.Model,), attrs)
-
-            setattr(sys.modules[__name__], table_name, Model)
-            #globals()[table] = Model
-
-            return Model
+            return self.set_model_cls(schema)
         raise StopIteration
+
+    def get_model_specification(self):
+        if self.serializer == 'yaml':
+            try:
+                schema = yaml.load(open(
+                    os.path.join(settings.BASE_DIR,self.file)))
+            except Exception as e:
+                print(e)
+        else:
+            raise Exception('unknown serializer')
+        return schema
+
+    def set_model_cls(self, schema):
+        table_name = schema[0].capitalize()
+
+        class Meta:
+            verbose_name = _(schema[1]['title'])
+            verbose_name_plural = _(schema[1]['title'])
+
+        table_name = table_name
+        attrs = {
+            u_p23(b'Meta'): Meta,
+            u_p23(b'__module__'): __name__,
+        }
+        for field in schema[1]['fields']:
+            attrs.update({field['id']:
+                getattr(CustomModelTypes, field['type'])(field['title'])})
+
+        try:
+            del cache.app_models[self.app][table_name]
+        except KeyError:
+            pass
+
+        Model = type(table_name, (ModelFuncMixin, models.Model,), attrs)
+
+        setattr(sys.modules[__name__], table_name, Model)
+        #globals()[table] = Model
+
+        return Model
+
 
 
 tables = []
