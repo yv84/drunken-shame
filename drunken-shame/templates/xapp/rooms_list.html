@@ -13,6 +13,6 @@
     <li>{{ list_verbose_name }} не найдено</li>
     {% endfor %}
 </ul>
-<p><a href="{% url 'xapp:room:create' %}">&larr; Создать {{ list_verbose_name }}</a></p>
+<p><a href="{% url 'xapp:rooms:create' %}">&larr; Создать {{ list_verbose_name }}</a></p>
 <p><a href="{% url 'xapp:xapp:home' %}">&larr; Home</a></p>
 {% endblock content %}

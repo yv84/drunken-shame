@@ -18,16 +18,21 @@ from django.utils.translation import ugettext as _
 from django.conf import settings
 
 
+app_module = __name__.replace('.models', '')
+
+
 class ModelFuncMixin(object):
     def __str__(self):
         return u"{0}".format(self._meta.fields[1].value_to_string(self))
 
     @classmethod
     def field_name(cls, field):
-        return User._meta.get_field(field).verbose_name
+        return cls._meta.get_field(field).verbose_name
 
     def get_absolute_url(self):
-        return reverse('xapp:user:detail', kwargs={'pk': self.pk})
+        url_name = ''.join([app_module, ':',
+            self.__class__.__name__.lower(), ':', 'detail'])
+        return reverse(url_name, kwargs={'pk': self.pk})
 
 
 class CustomModelTypes(object):

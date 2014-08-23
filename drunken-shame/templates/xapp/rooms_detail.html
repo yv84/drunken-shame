@@ -9,5 +9,5 @@
 {% block content %}
 <h3>{{ object|field_name:"department" }}: {{ object.department }}</h3>
 <p>{{ object|field_name:"spots" }} = {{ object.spots }}</p>
-<p><a href="{% url 'xapp:room:list' %}">&larr; {{ list_verbose_name }} список</a></p>
+<p><a href="{% url 'xapp:rooms:list' %}">&larr; {{ list_verbose_name }} список</a></p>
 {% endblock content %}

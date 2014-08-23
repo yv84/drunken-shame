@@ -12,6 +12,6 @@
 <p>{{ object|field_name:field_name }} = {{ object|field_value:field_name }}</p>
 {% endif %}
 {% endfor %}
-<p><a href="{% url 'xapp:room:list' %}">
+<p><a href="{% url 'xapp:rooms:list' %}">
     &larr; {{ list_verbose_name }} список</a></p>
 {% endblock content %}

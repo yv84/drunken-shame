@@ -43,12 +43,12 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # If you're using Django 1.6.x or earlier
     'debug_toolbar',
     'crispy_forms',
     'south',
     'xapp',
     'accounts',
+    'rest_framework',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -100,3 +100,16 @@ TEMPLATE_DIRS = (
 )
 
 CRISPY_TEMPLATE_PACK = 'uni_form'
+
+REST_FRAMEWORK = {
+    # Use hyperlinked styles by default.
+    # Only used if the `serializer_class` attribute is not set on a view.
+    'DEFAULT_MODEL_SERIALIZER_CLASS':
+        'rest_framework.serializers.HyperlinkedModelSerializer',
+
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny' #DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
