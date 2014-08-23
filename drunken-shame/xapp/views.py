@@ -1,6 +1,12 @@
+import sys
+
+
 from django.views import generic
 from django.core.urlresolvers import reverse
+from rest_framework import viewsets
 
+from . import serializers
+from .models import app_module, u_p23, tables
 from .models import (
     Rooms,
     Users,
@@ -9,6 +15,10 @@ from .forms import (
     RoomsForm,
     UsersForm,
 )
+
+
+app_views = sys.modules[__name__]
+
 
 class ListVerboseName(object):
     def get_context_data(self, **kwargs):
@@ -57,3 +67,26 @@ class UsersCreateView(generic.CreateView):
     def form_invalid(self, form):
         response = super(UsersCreateView, self).form_invalid(form)
         return response
+
+
+
+
+
+
+
+#-------------REST app-----------
+for table in tables:
+    table_name = table.__name__
+
+    attrs = {
+        u_p23(b'__module__'): __name__,
+        u_p23(b'queryset'): \
+            table.objects.all(),
+        u_p23(b'serializer_class'): \
+            getattr(serializers, ''.join([table_name, 'Serializer'])),
+    }
+
+    view_set_name = ''.join([table_name, 'ViewSet'])
+    ViewSet = type(view_set_name, (viewsets.ModelViewSet,), attrs)
+
+    setattr(app_views, view_set_name, ViewSet)
