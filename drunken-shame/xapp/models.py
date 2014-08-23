@@ -40,7 +40,9 @@ class ModelFuncMixin(object):
     def get_all_tables(cls):
         sheets = []
         for table in tables:
-            sheets.append(table._meta.verbose_name)
+            url_name = ''.join([app_module, ':', 'api',
+                ':', table.__name__.lower(), "-list"])
+            sheets.append([reverse(url_name), table._meta.verbose_name])
         return sheets
 
 

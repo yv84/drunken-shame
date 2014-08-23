@@ -15,17 +15,24 @@ app_urls = sys.modules[__name__]
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
-
+#router.register(r'123', views.RootView)
 # ViewSets define the view behavior.
 for table in tables:
     table_name = table.__name__
     view_set_name = ''.join([table_name, 'ViewSet'])
-    router.register(table_name.lower(), getattr(views, view_set_name))
+    router.register(table_name.lower(), getattr(views, view_set_name),
+        base_name=table_name.lower())
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browseable API.
+
+list_models_patterns = patterns('',
+    url(r'^963c98e6c3fb42e991e7516ddc8f1096$', views.ListModels.as_view(), name='list'),
+)
+
 urlpatterns += (
-    url(r'^app/', include(router.urls)),
+    url(r'^api/', include(list_models_patterns, namespace='api:models')),
+    url(r'^api/', include(router.urls, namespace='api')),
 )
 
 #---------Class based app--------
