@@ -21,6 +21,8 @@ from django.conf import settings
 app_module = __name__.replace('.models', '')
 
 
+tables = []
+
 class ModelFuncMixin(object):
     def __str__(self):
         return u"{0}".format(self._meta.fields[1].value_to_string(self))
@@ -33,6 +35,13 @@ class ModelFuncMixin(object):
         url_name = ''.join([app_module, ':',
             self.__class__.__name__.lower(), ':', 'detail'])
         return reverse(url_name, kwargs={'pk': self.pk})
+
+    @classmethod
+    def get_all_tables(cls):
+        sheets = []
+        for table in tables:
+            sheets.append(table._meta.verbose_name)
+        return sheets
 
 
 class CustomModelTypes(object):
@@ -120,7 +129,6 @@ class ModelGenerator():
 
 
 
-tables = []
 for model in ModelGenerator(os.path.join(
             settings.BASE_DIR, 'model.yaml') , 'yaml'):
     tables.append(model)
