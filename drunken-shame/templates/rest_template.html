@@ -3,6 +3,7 @@
 <head>
   <title>{% block title %}Web приложение на django{% endblock title %}</title>
   <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+  <link rel="stylesheet" href="//cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
   <style>
 
   </style>
@@ -14,52 +15,59 @@
   <section id="sheet_field">
   </section>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <script src="//cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
   <script>
 
   </script>
   <script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
-  <script>
-  var location_href = window.location.href;
-  // console.log(location_href)
-  // console.log(location_href+"{% url 'xapp:api-models:list' %}")
-// $(document).ready(function() {
-get_cheets = $.get( "{% url 'xapp:api-models:list' %}", function( data ) {
-  console.log(data);
+<script>
+get_sheets = $.get( "{% url 'xapp:api-models:list' %}", function( data ) {
+  data = data[0]
   $("#sheet_name").unbind().find('div').remove();
-  _.each([data[0][0], data[0][1]], function(element, index, sheets) {
-    console.log(element, index);
+  _.each(data, function(element, index, sheets) {
     $("#sheet_name").append('<div/>');
     $("#sheet_name>div").last()
-      .append(element[1])
+      .append(element.sheet)
       .on('click', function(e) {
-        return get_fields(element[0]);
-      });
-  });
-});
-get_fields = function( url ) {
+        return get_fields(element.fields, element.url);
+      } );
+  } );
+} );
+get_fields = function( sheet_schema, url ) {
   $.get(url, function( data ) {
-    $("#sheet_field").unbind().find('table').remove()
-    $("#sheet_field").append('<table/>')
-    $("#sheet_field>table").append('<th/>');
-    for(var element in data[0]) {
-      $("#sheet_field>table>th").append('<td/>');
-      $("#sheet_field>table>th>td:last").text(element)
-    };
-    _.each(data, function(elements, index, sheets) {
-      $("#sheet_field>table").append('<tr/>');
-      console.log(elements);
-      for(var element in elements) {
-        console.log(element);
-        $("#sheet_field>table>tbody>tr:last").last().append('<td/>');
-        $("#sheet_field>table>tbody>tr:last>td:last").text(elements[element])
+    filling_table(sheet_schema, data)
+  } );
+};
+filling_table = function( sheet_schema, data ) {
+  $("#sheet_field").unbind().find('table').remove();
+  $("#sheet_field").append('<table/>');
+  var dataSet = []
+  var dataRow = []
 
-          // .on('click', function(e) {
-          //   console.log(this, e);
-          // });
-      };
-    });
-  });
+  _.each(data , function( row, index, data ) {
+      dataRow = []
+      _.each(sheet_schema , function( column, index, sheet_schema ) {
+          dataRow.push(row[column.id]);
+      });
+      dataSet.push(dataRow);
+  } );
+  var Columns = [];
+  _.each(sheet_schema , function( column, index, sheet_schema ) {
+      Columns.push({ "title": column.name });
+  } );
+  $('#sheet_field>table')
+    .html( '<table' +
+        'cellpadding="0" cellspacing="0" border="0"' +
+        'class="display" id="example">' +
+        '</table>'
+    );
+  var table = $('#sheet_field>table').dataTable( {
+      "data": dataSet,
+      "columns": Columns,
+      "aLengthMenu": [[-1, 10, 25, 50, 100, 200, ],
+                    ["All", 10, 25, 50, 100, 200, ]],
+  } );
 };
 $(document).ready(function() {
     $('.dateinput').datepicker({
@@ -67,6 +75,7 @@ $(document).ready(function() {
       changeMonth: true,
         changeYear: true
     });
-  });</script>
+});
+</script>
 </body>
 </html>
