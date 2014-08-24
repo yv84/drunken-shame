@@ -5,15 +5,42 @@
   <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
   <link rel="stylesheet" href="//cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
   <style>
-
+    body{
+      margin: 0 left;
+      width: 1024px;
+    }
+    #sheet_name{
+      float: left;
+      margin: 10px;
+      padding-right: 100px;
+      display:inline-block;
+      float: left;
+      width: 70px;
+      margin-right: 20px;
+    }
+    #content{
+      float: left;
+      width: 804px;
+      margin: 10px, 500px;
+      padding: 0px, 500px;
+    }
+    #new_field{
+      border-style: none;
+      width: 450px;
+      margin: 30px;
+      padding: 5px;
+    }
   </style>
 </head>
 <body>
   <section id="sheet_name">
   </section>
-  <hr>
-  <section id="sheet_field">
-    <div></div>
+  <section id="content">
+    <section id="sheet_field">
+      <div></div>
+    </section>
+    <section id="new_field">
+    </section>
   </section>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
   <script src="//cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
@@ -31,18 +58,22 @@ get_sheets = $.get( "{% url 'xapp:api-models:list' %}", function( data ) {
     $("#sheet_name>div").last()
       .append(element.sheet)
       .on('click', function(e) {
-        return get_fields(element.fields, element.url);
+        return get_fields(element.fields, element.url, element.sheet);
       } );
   } );
 } );
-get_fields = function( sheet_schema, url ) {
+get_fields = function( sheet_schema, url, sheet_name ) {
   $.get(url, function( data ) {
-    filling_table(sheet_schema, data)
+    filling_table(sheet_schema, data, sheet_name)
   } );
 };
-filling_table = function( sheet_schema, data ) {
+filling_table = function( sheet_schema, data, sheet_name ) {
   $("#sheet_field>div").remove();
+  $("#new_field>div").remove();
   $("#sheet_field").append('<div/>');
+  $("#new_field").append('<div/>');
+  $("#new_field").css("border-style", "solid");
+  $("#new_field>div").text(sheet_name+' добавить:');
   $("#sheet_field>div").unbind().find('table').remove();
   $("#sheet_field>div").append('<table/>');
   var dataSet = []
@@ -57,31 +88,52 @@ filling_table = function( sheet_schema, data ) {
   } );
   var Columns = [];
   var aoColumns = []
+  $('#new_field>div').append('<form action="" input type="submit" value="Submit"></form>');
   _.each(sheet_schema , function( column, index, sheet_schema ) {
       Columns.push({ "title": column.name });
       if (column.type == "Date") {
-        aoColumns.push({ "sClass": "dateinput" });
+        aoColumns.push({ "sClass": "Date", "sTitle": column.name, "sWidth": "15%", });
       } else if (column.type == "Integer") {
-        aoColumns.push({ "sClass": "Integer" });
+        aoColumns.push({ "sClass": "Integer", "sTitle": column.name, "sWidth": "15%", });
       } else if (column.type == "Char") {
-        aoColumns.push({ "sClass": "Char" });
+        aoColumns.push({ "sClass": "Char", "sTitle": column.name, "sWidth": "15%", });
       } else {
-        aoColumns.push(null);
+        aoColumns.push({ "sTitle": column.name, "sWidth": "15%", });
       };
+      $('#new_field>div>form').append(
+          '<p class="">' +
+          '<label for="'+ column.id + '">'+ column.name +
+          '<input type="text" id="' + column.id + '" size="20"' +
+            'name="' + column.name + '"' +
+            'value="" placeholder="" />' +
+          '</p>'
+      );
   } );
+  $('#new_field>div>form').append('<input type="submit" value="Submit">');
   $('#sheet_field>table')
     .html( '<table' +
         'cellpadding="0" cellspacing="0" border="0"' +
         'class="display" id="example">' +
         '</table>'
     );
+    console.log(Columns)
+    console.log(aoColumns)
   var table = $('#sheet_field>div>table').dataTable( {
       "data": dataSet,
       "columns": Columns,
       "aoColumns": aoColumns,
+      //"bAutoWidth": false,
+      "bPaginate": false,
+      "bFilter": false,
+      "bSort" : false,
       "aLengthMenu": [[-1, 10, 25, 50, 100, 200, ],
                     ["All", 10, 25, 50, 100, 200, ]],
   } );
+  $('#sheet_field>div thead').find('.ID').removeClass('ID')
+  $('#sheet_field>div thead').find('.Integer').removeClass('Integer')
+  $('#sheet_field>div thead').find('.Char').removeClass('Char')
+  $('#sheet_field>div thead').find('.Date').removeClass('Date')
+  $('#sheet_field>div>table')
   $('.dateinput').on('click', function (e) {
     $(this).datepicker({
       format: "yyyy-mm-dd",
@@ -92,6 +144,10 @@ filling_table = function( sheet_schema, data ) {
   } );
   $('.Integer, .Char').each( function( index ) {
     editCell($(this));
+  } );
+  $('#new_field>div').click(function() {
+      createRecord()
+      return false;
   } );
 };
 
@@ -109,7 +165,7 @@ editCell = function (cell) {
         '<label for="p_scnts">' +
         '<input type="text" id="p_scnt" size="20"' +
           'name="p_scnt_' + '"' +
-          'value="" placeholder="'+ $(this).attr('data-value') +'" />' +
+          'value="'+ $(this).attr('data-value') +'" placeholder="" />' +
         '</label> <a href="#" id="okScnt">Ok</a>' +
         '</label> <a href="#" id="remScnt">Отмена</a>' +
         '</p>'
@@ -118,6 +174,17 @@ editCell = function (cell) {
     return false;
   } );
 };
+
+createRecord = function (data) {
+  data = data || {
+    "date_joined": "2014-01-01",
+    "name": "a",
+    "paycheck": 123
+  };
+  return false;
+}
+
+
 </script>
 </body>
 </html>
