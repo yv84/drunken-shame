@@ -13,6 +13,7 @@
   </section>
   <hr>
   <section id="sheet_field">
+    <div></div>
   </section>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
   <script src="//cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
@@ -40,8 +41,10 @@ get_fields = function( sheet_schema, url ) {
   } );
 };
 filling_table = function( sheet_schema, data ) {
-  $("#sheet_field").unbind().find('table').remove();
-  $("#sheet_field").append('<table/>');
+  $("#sheet_field>div").remove();
+  $("#sheet_field").append('<div/>');
+  $("#sheet_field>div").unbind().find('table').remove();
+  $("#sheet_field>div").append('<table/>');
   var dataSet = []
   var dataRow = []
 
@@ -53,8 +56,18 @@ filling_table = function( sheet_schema, data ) {
       dataSet.push(dataRow);
   } );
   var Columns = [];
+  var aoColumns = []
   _.each(sheet_schema , function( column, index, sheet_schema ) {
       Columns.push({ "title": column.name });
+      if (column.type == "Date") {
+        aoColumns.push({ "sClass": "dateinput" });
+      } else if (column.type == "Integer") {
+        aoColumns.push({ "sClass": "Integer" });
+      } else if (column.type == "Char") {
+        aoColumns.push({ "sClass": "Char" });
+      } else {
+        aoColumns.push(null);
+      };
   } );
   $('#sheet_field>table')
     .html( '<table' +
@@ -62,20 +75,49 @@ filling_table = function( sheet_schema, data ) {
         'class="display" id="example">' +
         '</table>'
     );
-  var table = $('#sheet_field>table').dataTable( {
+  var table = $('#sheet_field>div>table').dataTable( {
       "data": dataSet,
       "columns": Columns,
+      "aoColumns": aoColumns,
       "aLengthMenu": [[-1, 10, 25, 50, 100, 200, ],
                     ["All", 10, 25, 50, 100, 200, ]],
   } );
-};
-$(document).ready(function() {
-    $('.dateinput').datepicker({
+  $('.dateinput').on('click', function (e) {
+    $(this).datepicker({
       format: "yyyy-mm-dd",
       changeMonth: true,
-        changeYear: true
+      changeYear: true
     });
-});
+    $(this).show();
+  } );
+  $('.Integer, .Char').each( function( index ) {
+    editCell($(this));
+  } );
+};
+
+editCell = function (cell) {
+  cell.on('click', function (e) {
+    $('.edit-hidden').each( function( index ) {
+      $(this).text($(this).attr('data-value'));
+      editCell($(this));
+      $(this).removeClass('edit-hidden');
+    });
+    $(this).attr('data-value', $(this).text());
+    $(this).addClass('edit-hidden').text('');
+    $(this).append(
+        '<p class="edit">' +
+        '<label for="p_scnts">' +
+        '<input type="text" id="p_scnt" size="20"' +
+          'name="p_scnt_' + '"' +
+          'value="" placeholder="'+ $(this).attr('data-value') +'" />' +
+        '</label> <a href="#" id="okScnt">Ok</a>' +
+        '</label> <a href="#" id="remScnt">Отмена</a>' +
+        '</p>'
+    );
+    $(this).unbind();
+    return false;
+  } );
+};
 </script>
 </body>
 </html>
