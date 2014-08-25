@@ -3,7 +3,7 @@
 <head>
   <title>{% block title %}Web приложение на django{% endblock title %}</title>
   <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
-  <!-- <link rel="stylesheet" href="//cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css"> -->
+    <!-- <link rel="stylesheet" href="//cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css"> -->
   <style>
     body{
       margin: 0 left;
@@ -54,6 +54,16 @@
       overflow: hidden;
       width : 100px;
       border-style: double;
+    }
+    #datapicker{
+      margin: 10px, -10px;
+      font-size: 10px;
+      position: absolute;
+      z-index: 10000;
+    }
+    .Date{
+      position: relative;
+      overflow: visible;
     }
   </style>
 </head>
@@ -135,11 +145,6 @@ filling_table = function( sheet_schema, data, sheet_name ) {
           '</p>'
       );
   } );
-  // sheet_schema
-  // var sWidth = +$("#content").css('width').split('px')[0] / sheet_schema.length + "px";
-  // console.log(sWidth)
-  // $(".sWidth").width(sWidth);
-  // console.log($(".sWidth").css("width"))
   $('#object_form>div>form').append('<input type="submit" value="Submit">');
   $('#sheet_field>table')
     .html( '<table' +
@@ -147,8 +152,6 @@ filling_table = function( sheet_schema, data, sheet_name ) {
         'class="display" id="example">' +
         '</table>'
     );
-    console.log(Columns)
-    console.log(aoColumns)
   var table = $('#sheet_field>div>table').dataTable( {
       "data": dataSet,
       "columns": Columns,
@@ -166,25 +169,21 @@ filling_table = function( sheet_schema, data, sheet_name ) {
   $('#sheet_field>div thead').find('.Char').removeClass('Char')
   $('#sheet_field>div thead').find('.Date').removeClass('Date')
   $('#sheet_field>div>table')
-  $('.dateinput').on('click', function (e) {
-    $(this).datepicker({
-      format: "yyyy-mm-dd",
-      changeMonth: true,
-      changeYear: true
-    });
-    $(this).show();
+  $('.Date').on('click', function (e) {
+    editDateCell($(this));
   } );
+
   $('.Integer, .Char').each( function( index ) {
     editCell($(this));
   } );
   $('#object_form>div').click(function() {
-      createRecord()
-      return false;
+    createRecord()
+    return false;
   } );
 };
 
 editCell = function (cell) {
-  cell.on('click', function (e) {
+  cell.one('click', function (e) {
     $('.edit-hidden').each( function( index ) {
       $(this).text($(this).attr('data-value'));
       editCell($(this));
@@ -194,8 +193,8 @@ editCell = function (cell) {
     $(this).addClass('edit-hidden').text('');
     $(this).append(
         '<p class="edit">' +
-        '<label for="p_scnts">' +
-        '<input type="text" id="p_scnt" size="20"' +
+        '<label class=edit for="p_scnts">' +
+        '<input type="text" id="p_scnt" class=edit size="20"' +
           'name="p_scnt_' + '"' +
           'value="'+ $(this).attr('data-value') +'" placeholder="" />' +
         '</label> <a href="#" id="okScnt">Ok</a>' +
@@ -203,9 +202,66 @@ editCell = function (cell) {
         '</p>'
     );
     $(this).unbind();
+    $(".edit").on('click', function (e) {
+      return false;
+    } );
+    $("#okScnt").on('click', function (e) {
+      saveInput(cell);
+      return false;
+    } );
+    $("#p_scnt").focus().val($(this).attr('data-value'));;
+    setTimeout(function() {
+      $("body :not(.Integer, .Char, .edit)").one('click', function (e) {
+        console.log(this)
+        hideInput($(this));
+        return false;
+      } );
+    }, 400);
     return false;
   } );
 };
+saveInput = function (cell) {
+  $('.edit-hidden').each( function( index ) {
+    $(this).text($(cell).find('#p_scnt')[0].value);
+    editCell($(this));
+    $(this).removeClass('edit-hidden');
+  } );
+  return false;
+};
+hideInput = function () {
+  $('.edit-hidden').each( function( index ) {
+    $(this).text($(this).attr('data-value'));
+    editCell($(this));
+    $(this).removeClass('edit-hidden');
+  } );
+  return false;
+};
+
+editDateCell = function (cell) {
+    $('#datapicker').each( function( index ) {
+      $(this).remove()
+    } );
+    cell.append('<div class="hasDatepicker">' +
+                  '<div id="datapicker"></div>' +
+                '</div>'
+    );
+    $("#datapicker").datepicker({
+      dateFormat: 'dd/mm/yy',
+      onSelect: function(dateText, inst) {
+          cell.text(dateText);
+          $("body").trigger('click');
+      }
+    } );
+    setTimeout(function() {
+      $("body").one("click", function (e) {
+        $('.hasDatepicker').each( function( index ) {
+          $(this).remove();
+        } );
+        return false;
+      } );
+    }, 400);
+};
+
 
 createRecord = function (data) {
   data = data || {
