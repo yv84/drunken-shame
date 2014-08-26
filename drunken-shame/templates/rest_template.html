@@ -159,7 +159,7 @@ filling_table = function( sheet_schema, data, sheet_name ) {
         'class="display" id="example">' +
         '</table>'
     );
-  var table = $('#sheet_field>div>table').dataTable( {
+  var table = $('#sheet_field>div>table').DataTable( {
       "data": dataSet,
       "columns": Columns,
       "aoColumns": aoColumns,
@@ -171,15 +171,26 @@ filling_table = function( sheet_schema, data, sheet_name ) {
       "aLengthMenu": [[-1, 10, 25, 50, 100, 200, ],
                     ["All", 10, 25, 50, 100, 200, ]],
   } );
+  $('#sheet_field>div').on( 'addRow', function ( event ) {
+    var row = Array.prototype.slice.call(arguments).slice(1);
+    table.row.add( row ).draw();
+    $('.Date').off('click')
+    $('.Date').on('click', function (e) {
+      editDateCell($(this));
+    } );
+    $('.Integer, .Char').each( function( index ) {
+      editCell($(this));
+    } );
+  } );
   $('#sheet_field>div thead').find('.ID').removeClass('ID')
   $('#sheet_field>div thead').find('.Integer').removeClass('Integer')
   $('#sheet_field>div thead').find('.Char').removeClass('Char')
   $('#sheet_field>div thead').find('.Date').removeClass('Date')
   $('#sheet_field>div>table')
+
   $('.Date').on('click', function (e) {
     editDateCell($(this));
   } );
-
   $('.Integer, .Char').each( function( index ) {
     editCell($(this));
   } );
