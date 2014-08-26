@@ -9,6 +9,9 @@
       margin: 0 left;
       width: 1024px;
     }
+    .strong{
+      font-weight: bolder;
+    }
     #sheet_name{
       float: left;
       margin: 10px;
@@ -93,6 +96,10 @@ get_sheets = $.get( "{% url 'xapp:api-models:list' %}", function( data ) {
     $("#sheet_name>div").last()
       .append(element.sheet)
       .on('click', function(e) {
+        $('.strong').each( function( index ) {
+          $(this).removeClass('strong');
+        } );
+        $(this).addClass('strong');
         return get_fields(element.fields, element.url, element.sheet);
       } );
   } );
@@ -184,6 +191,9 @@ filling_table = function( sheet_schema, data, sheet_name ) {
 
 editCell = function (cell) {
   cell.one('click', function (e) {
+    $('.hasDatepicker').each( function( index ) {
+      $(this).remove();
+    } );
     $('.edit-hidden').each( function( index ) {
       $(this).text($(this).attr('data-value'));
       editCell($(this));
@@ -194,7 +204,7 @@ editCell = function (cell) {
     $(this).append(
         '<p class="edit">' +
         '<label class=edit for="p_scnts">' +
-        '<input type="text" id="p_scnt" class=edit size="20"' +
+        '<input type="text" id="p_scnt" class="edit" size="20"' +
           'name="p_scnt_' + '"' +
           'value="'+ $(this).attr('data-value') +'" placeholder="" />' +
         '</label> <a href="#" id="okScnt">Ok</a>' +
@@ -212,11 +222,10 @@ editCell = function (cell) {
     $("#p_scnt").focus().val($(this).attr('data-value'));;
     setTimeout(function() {
       $("body :not(.Integer, .Char, .edit)").one('click', function (e) {
-        console.log(this)
         hideInput($(this));
-        return false;
+        return true;
       } );
-    }, 400);
+    }, 200);
     return false;
   } );
 };
@@ -257,9 +266,9 @@ editDateCell = function (cell) {
         $('.hasDatepicker').each( function( index ) {
           $(this).remove();
         } );
-        return false;
+        return true;
       } );
-    }, 400);
+    }, 200);
 };
 
 
