@@ -232,7 +232,7 @@ editCell = function (cell) {
     } );
     $("#p_scnt").focus().val($(this).attr('data-value'));;
     setTimeout(function() {
-      $("body :not(.Integer, .Char, .edit)").one('click', function (e) {
+      $("body :not(.Integer, .Char, .edit)").on('click', function (e) {
         hideInput($(this));
         return true;
       } );

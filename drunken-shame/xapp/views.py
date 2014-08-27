@@ -2,6 +2,7 @@ import sys
 import json
 
 
+from django.core.serializers.json import DjangoJSONEncoder
 from django import http
 from django.views import generic
 from django.core.urlresolvers import reverse
@@ -39,7 +40,7 @@ class JSONResponseMixin(object):
         # to do much more complex handling to ensure that arbitrary
         # objects -- such as Django model instances or querysets
         # -- can be serialized as JSON.
-        return json.dumps(context)
+        return json.dumps(context, cls=DjangoJSONEncoder)
 
 
 class ListModels(JSONResponseMixin, generic.TemplateView):
