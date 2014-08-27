@@ -178,8 +178,11 @@ filling_table = function( sheet_schema, data, sheet_name ) {
     $('.Date').on('click', function (e) {
       editDateCell($(this));
     } );
-    $('.Integer, .Char').each( function( index ) {
-      editCell($(this));
+    $('.Char').each( function( index ) {
+      editCell($(this), new RegExp("^\\w{1,99}$"));
+    } );
+    $('.Integer').each( function( index ) {
+      editCell($(this), new RegExp("^\\d{1,15}$"));
     } );
   } );
   $('#sheet_field>div thead').find('.ID').removeClass('ID')
@@ -191,8 +194,11 @@ filling_table = function( sheet_schema, data, sheet_name ) {
   $('.Date').on('click', function (e) {
     editDateCell($(this));
   } );
-  $('.Integer, .Char').each( function( index ) {
-    editCell($(this));
+  $('.Char').each( function( index ) {
+    editCell($(this), new RegExp("^\\w{1,99}$"));
+  } );
+  $('.Integer').each( function( index ) {
+    editCell($(this), new RegExp("^\\d{1,15}$"));
   } );
   $('#object_form>div').click(function() {
     createRecord()
@@ -200,14 +206,14 @@ filling_table = function( sheet_schema, data, sheet_name ) {
   } );
 };
 
-editCell = function (cell) {
+editCell = function (cell, reg_patt) {
   cell.one('click', function (e) {
     $('.hasDatepicker').each( function( index ) {
       $(this).remove();
     } );
     $('.edit-hidden').each( function( index ) {
       $(this).text($(this).attr('data-value'));
-      editCell($(this));
+      editCell($(this), reg_patt);
       $(this).removeClass('edit-hidden');
     });
     $(this).attr('data-value', $(this).text());
@@ -227,31 +233,33 @@ editCell = function (cell) {
       return false;
     } );
     $("#okScnt").on('click', function (e) {
-      saveInput(cell);
+      if (reg_patt.test($(cell).find('#p_scnt')[0].value)){
+          saveInput(cell, reg_patt);
+      }
       return false;
     } );
     $("#p_scnt").focus().val($(this).attr('data-value'));;
     setTimeout(function() {
       $("body :not(.Integer, .Char, .edit)").on('click', function (e) {
-        hideInput($(this));
+        hideInput($(this), reg_patt);
         return true;
       } );
     }, 200);
     return false;
   } );
 };
-saveInput = function (cell) {
+saveInput = function (cell, reg_patt) {
   $('.edit-hidden').each( function( index ) {
     $(this).text($(cell).find('#p_scnt')[0].value);
-    editCell($(this));
+    editCell($(this), reg_patt);
     $(this).removeClass('edit-hidden');
   } );
   return false;
 };
-hideInput = function () {
+hideInput = function (cell, reg_patt) {
   $('.edit-hidden').each( function( index ) {
     $(this).text($(this).attr('data-value'));
-    editCell($(this));
+    editCell($(this), reg_patt);
     $(this).removeClass('edit-hidden');
   } );
   return false;
