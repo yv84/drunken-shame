@@ -4,7 +4,8 @@ from __future__ import (absolute_import, division,
 
 import os
 import sys
-from datetime import date
+import collections
+import datetime
 
 import yaml
 
@@ -18,10 +19,17 @@ from django.utils.translation import ugettext as _
 from django.conf import settings
 
 
+try:
+    basestring
+except NameError:
+    # Python 3
+    basestring = unicode = str
+
 app_module = __name__.replace('.models', '')
 
 
 tables = []
+
 
 class ModelFuncMixin(object):
     def __str__(self):
@@ -36,6 +44,53 @@ class ModelFuncMixin(object):
             self.__class__.__name__.lower(), ':', 'detail'])
         return reverse(url_name, kwargs={'pk': self.pk})
 
+    @staticmethod
+    def get_date_format(d, formats=settings.DATE_INPUT_FORMATS):
+        if isinstance(d, basestring):
+            date_format = lambda d, format: \
+                datetime.datetime.strptime(d, format).date()
+        elif isinstance(d, datetime.date):
+            date_format = lambda d, format: d.strftime(format)
+        if isinstance(formats, basestring):
+            formats = (formats,)
+        elif isinstance(formats, collections.Iterable):
+            pass
+        else:
+            raise Exception('DATE_INPUT_FORMATS error')
+        for format in formats:
+            try:
+                formated_date = date_format(d, format)
+                return formated_date
+            except:
+                pass
+
+    def get_date_with_format(self, date_field: str,
+                            formats=settings.DATE_INPUT_FORMATS):
+        _date_field = getattr(self, date_field)
+        formated_date = self.get_date_format(_date_field, formats)
+        if formated_date:
+            return formated_date
+        else:
+            raise Exception("error DATE_INPUT_FORMATS")
+
+    def set_date_with_format(self, date_field: str, d: str,
+                            formats=settings.DATE_INPUT_FORMATS):
+        formated_date = self.get_date_format(d, formats)
+        if formated_date == None:
+            raise Exception("error date: ", d)
+        self._meta.get_field(date_field).save_form_data(self, formated_date)
+        self.save(update_fields=[date_field])
+
+    @classmethod
+    def create_from_dict(cls, data_dict):
+        for field in cls._meta.fields:
+            if isinstance(field, models.DateField):
+                _date = cls.get_date_format(data_dict[field.name])
+                data_dict[field.name] = cls.get_date_format(
+                    _date, formats='%Y-%m-%d')
+        m = cls(**data_dict)
+        m.save()
+
     @classmethod
     def get_all_tables(cls):
         sheets = []
@@ -47,7 +102,7 @@ class ModelFuncMixin(object):
                 local_fields.append({
                     'id': field.column,
                     'name': field.verbose_name,
-                    'type': field.__class__.__name__.split('Field')[0]  
+                    'type': field.__class__.__name__.split('Field')[0]
                 })
             sheets.append({
                 'sheet': table._meta.verbose_name,
@@ -61,17 +116,20 @@ class CustomModelTypes(object):
 
     @staticmethod
     def int(value):
-        return models.IntegerField(verbose_name=_(value),)
+        return models.IntegerField(verbose_name=_(value),
+            blank=False, null=False,)
 
     @staticmethod
     def char(value):
         return models.CharField(max_length=100,
-            verbose_name = _(value),)
+            verbose_name=_(value),
+            blank=False, null=False,)
 
     @staticmethod
     def date(value):
         return models.DateField(auto_now=False, auto_now_add=False,
-            verbose_name = _(value),)
+            verbose_name=_(value),
+            blank=False, null=False,)
 
     yaml_types = {
         'char': 'CharField',
