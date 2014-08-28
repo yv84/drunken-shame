@@ -27,7 +27,7 @@ for table in tables:
 # Additionally, we include login URLs for the browseable API.
 
 list_models_patterns = patterns('',
-    url(r'^963c98e6c3fb42e991e7516ddc8f1096$', views.ListModels.as_view(), name='list'),
+    url(r'^963c98e6c3fb42e991e7516ddc8f1096/$', views.ListModels.as_view(), name='list'),
 )
 
 urlpatterns += (

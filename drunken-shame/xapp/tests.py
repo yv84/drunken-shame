@@ -16,19 +16,6 @@ from django.test.client import Client
 
 from django.conf import settings
 
-# Create your tests here.
-
-
-class SmokeTest(TestCase):
-
-    def test_home_url(self):
-        #found = resolve('/')
-        pass
-
-    def test_admin_url(self):
-        #found = resolve('/admin/')
-        pass
-
 
 class ModelTest(TestCase):
 
@@ -67,9 +54,9 @@ class ModelTest(TestCase):
         Users.create_from_dict(d)
         d = {'name':'B', 'paycheck':'20', 'date_joined': '01/01/2014'}
         Users.create_from_dict(d)
-        d = {'name':'C', 'paycheck':'30', 'date_joined': '01-01-2014'}
+        d = {'name':'C', 'paycheck':'30', 'date_joined': '02-01-2014'}
         Users.create_from_dict(d)
-        
+
         self.assertEqual(Users.objects.filter(name='A').count(), 1)
         self.assertEqual(Users.objects.all()[0].get_absolute_url(),
             u'/users/id/1/')
@@ -148,52 +135,84 @@ class ModelTest(TestCase):
               {'id': 'spots', 'name': 'Вместимость', 'type': 'Integer'}],
             'sheet': 'Комнаты', 'url': '/api/rooms/'})
 
-@unittest.skip
+
 class RequestTest(TestCase):
 
     def setUp(self):
         self.c = Client()
         self.csrf_client = Client(enforce_csrf_checks=True)
-        from xapp.models import tables
-        self.Users = tables[0]
-        self.Rooms = tables[1]
 
     def tearDown(self):
         pass
 
-    @unittest.skip
     def test_get_home_request(self):
+        response = self.c.get('/')
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(u'text/html; charset=utf-8',
+            response._headers['content-type'][1])
+        self.assertIn('Web приложение на django', response.content.decode('utf-8'))
 
-        response = self.csrf_client.get('/api/963c98e6c3fb42e991e7516ddc8f1096',
+    def test_get_home_ajax_request(self):
+        response = self.csrf_client.get('/api/963c98e6c3fb42e991e7516ddc8f1096/',
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertEqual(200, response.status_code)
         self.assertEqual(u'application/json',
             response._headers['content-type'][1])
-
-    def test_get_rooms(self):
-        self.Rooms.objects.create(department='1', spots='10')
-        self.Rooms.objects.create(department='2', spots='20')
-        self.Rooms.objects.create(department='3', spots='30')
-        response = self.csrf_client.get('/api/963c98e6c3fb42e991e7516ddc8f1096',
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        url = json.loads(response.content.decode('utf-8'))[0][1]['url']
-        response = self.csrf_client.get(url,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(u'application/json',
-            response._headers['content-type'][1])
-        print(json.loads(response.content.decode('utf-8')))
+        self.assertIn('/api/users/', response.content.decode('utf-8'))
+        self.assertIn('/api/rooms/', response.content.decode('utf-8'))
 
     def test_get_rooms(self):
-        self.Users.objects.create(name='A', paycheck='10', date_joined='')
-        self.Users.objects.create(department='2', spots='20')
-        self.Users.objects.create(department='3', spots='30')
-        response = self.csrf_client.get('/api/963c98e6c3fb42e991e7516ddc8f1096',
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        url = json.loads(response.content.decode('utf-8'))[0][1]['url']
-        response = self.csrf_client.get(url,
+        from xapp.models import tables
+        from xapp.models import Rooms
+        d = {'department':'A', 'spots':'10'}
+        Rooms.create_from_dict(d)
+        d = {'department':'B', 'spots':'20'}
+        Rooms.create_from_dict(d)
+        d = {'department':'C', 'spots':'30'}
+        Rooms.create_from_dict(d)
+
+        response = self.csrf_client.get('/api/rooms/',
             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertEqual(200, response.status_code)
         self.assertEqual(u'application/json',
             response._headers['content-type'][1])
-        print(json.loads(response.content.decode('utf-8')))
+
+        self.assertIn('"department": "A"', response.content.decode('utf-8'))
+        self.assertIn('"department": "B"', response.content.decode('utf-8'))
+        self.assertIn('"department": "C"', response.content.decode('utf-8'))
+        self.assertNotIn('"department": "D"', response.content.decode('utf-8'))
+
+        self.assertIn('"spots": 10', response.content.decode('utf-8'))
+        self.assertIn('"spots": 20', response.content.decode('utf-8'))
+        self.assertIn('"spots": 30', response.content.decode('utf-8'))
+        self.assertNotIn('"spots": "10"', response.content.decode('utf-8'))
+
+    def test_get_rooms(self):
+        from xapp.models import tables
+        from xapp.models import Users
+        d = {'name':'A', 'paycheck':'10', 'date_joined': '2014-01-01'}
+        Users.create_from_dict(d)
+        d = {'name':'B', 'paycheck':'20', 'date_joined': '01/01/2014'}
+        Users.create_from_dict(d)
+        d = {'name':'C', 'paycheck':'30', 'date_joined': '02-01-2014'}
+        Users.create_from_dict(d)
+
+        response = self.csrf_client.get('/api/users/',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(u'application/json',
+            response._headers['content-type'][1])
+
+        self.assertIn('"name": "A"', response.content.decode('utf-8'))
+        self.assertIn('"name": "B"', response.content.decode('utf-8'))
+        self.assertIn('"name": "C"', response.content.decode('utf-8'))
+        self.assertNotIn('"department": "D"', response.content.decode('utf-8'))
+
+        self.assertIn('"paycheck": 10', response.content.decode('utf-8'))
+        self.assertIn('"paycheck": 20', response.content.decode('utf-8'))
+        self.assertIn('"paycheck": 30', response.content.decode('utf-8'))
+        self.assertNotIn('"paycheck": "10"', response.content.decode('utf-8'))
+
+        self.assertNotIn('"date_joined": "2014-01-01"', response.content.decode('utf-8'))
+        self.assertIn('"date_joined": "01-01-2014"', response.content.decode('utf-8'))
+        self.assertIn('"date_joined": "02-01-2014"', response.content.decode('utf-8'))

@@ -75,6 +75,8 @@ DATABASES = {
     }
 }
 
+APPEND_SLASH = True
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 
@@ -120,5 +122,7 @@ REST_FRAMEWORK = {
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny' #DjangoModelPermissionsOrAnonReadOnly'
-    ]
+    ],
+    'DATE_FORMAT': DATE_INPUT_FORMATS[0],
+    'DATE_INPUT_FORMAT': DATE_INPUT_FORMATS[0],
 }
