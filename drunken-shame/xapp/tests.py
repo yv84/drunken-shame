@@ -6,8 +6,6 @@ from __future__ import (absolute_import, division,
 import os
 import json
 
-import yaml
-
 from django.utils.six.moves import zip
 from django.core.urlresolvers import resolve
 from django.test import TestCase
@@ -26,8 +24,10 @@ class ModelTest(TestCase):
         pass
 
     def test_yaml_mapping(self):
-        yaml_f = yaml.load(open(os.path.join(settings.BASE_DIR,'model.yaml')))
         from xapp.models import tables
+        from xapp.models import ModelGenerator
+        yaml_f = ModelGenerator.yaml_ordered_load(
+            open(os.path.join(settings.BASE_DIR, 'model.yaml')),)
 
         for model_table, yaml_table in zip(tables,
                       [yaml_table for yaml_table in yaml_f]):

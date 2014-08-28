@@ -156,15 +156,28 @@ class ModelGenerator():
 
     def next(self):
         while self.schema:
-            schema = self.schema.popitem()
+            schema = self.schema.popitem(last=False)
             return self.set_model_cls(schema)
         raise StopIteration
+
+    @staticmethod
+    def yaml_ordered_load(stream, Loader=yaml.Loader,
+                      object_pairs_hook=collections.OrderedDict):
+        class OrderedLoader(Loader):
+            pass
+        def construct_mapping(loader, node):
+            loader.flatten_mapping(node)
+            return object_pairs_hook(loader.construct_pairs(node))
+        OrderedLoader.add_constructor(
+            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+            construct_mapping)
+        return yaml.load(stream, OrderedLoader)
 
     def get_model_specification(self):
         if self.serializer == 'yaml':
             try:
-                schema = yaml.load(open(
-                    os.path.join(settings.BASE_DIR,self.file)))
+                schema = self.yaml_ordered_load(open(
+                    os.path.join(settings.BASE_DIR,self.file)), yaml.SafeLoader)
             except Exception as e:
                 print(e)
         else:
