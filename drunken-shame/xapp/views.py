@@ -6,7 +6,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django import http
 from django.views import generic
 from django.core.urlresolvers import reverse
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 
 from . import serializers
 from .models import app_module, u_p23, tables
@@ -106,6 +106,7 @@ class UsersCreateView(generic.CreateView):
 
 
 #-------------REST app-----------
+
 for table in tables:
     table_name = table.__name__
 
@@ -118,6 +119,17 @@ for table in tables:
     }
 
     view_set_name = ''.join([table_name, 'ViewSet'])
-    ViewSet = type(view_set_name, (viewsets.ModelViewSet,), attrs)
+    ViewSet = type(
+        view_set_name,
+        (
+            mixins.ListModelMixin,
+            mixins.CreateModelMixin,
+            mixins.RetrieveModelMixin,
+            mixins.UpdateModelMixin,
+            # mixins.DestroyModelMixin,
+            viewsets.GenericViewSet,
+        ),
+        attrs
+    )
 
     setattr(app_views, view_set_name, ViewSet)
