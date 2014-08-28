@@ -1,14 +1,12 @@
 import sys
-from itertools import chain
+
 
 from rest_framework import serializers
-
 
 from .models import app_module, u_p23, tables
 
 
 app_serializers = sys.modules[__name__]
-
 
 for table in tables:
     table_name = table.__name__

@@ -43,12 +43,12 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'debug_toolbar',
-    'crispy_forms',
     'south',
     'xapp',
     'rest_framework',
 )
+if DEBUG:
+    INSTALLED_APPS += ('debug_toolbar',)
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',

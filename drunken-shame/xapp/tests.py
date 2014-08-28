@@ -58,10 +58,7 @@ class ModelTest(TestCase):
         Users.create_from_dict(d)
 
         self.assertEqual(Users.objects.filter(name='A').count(), 1)
-        self.assertEqual(Users.objects.all()[0].get_absolute_url(),
-            u'/users/id/1/')
-        self.assertEqual(Users.objects.all()[2].get_absolute_url(),
-            u'/users/id/3/')
+
         self.assertEqual(Users.objects.all()[0]._meta.verbose_name,
             u'Пользователи')
         self.assertEqual(str(Users.objects.all()[0]),
@@ -104,10 +101,6 @@ class ModelTest(TestCase):
         Rooms.create_from_dict(d)
 
         self.assertEqual(Rooms.objects.filter(department='A').count(), 1)
-        self.assertEqual(Rooms.objects.all()[0].get_absolute_url(),
-            u'/rooms/id/1/')
-        self.assertEqual(Rooms.objects.all()[2].get_absolute_url(),
-            u'/rooms/id/3/')
         self.assertEqual(Rooms.objects.all()[0]._meta.verbose_name,
             u'Комнаты')
         self.assertEqual(str(Rooms.objects.all()[0]),

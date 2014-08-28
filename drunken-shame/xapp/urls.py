@@ -30,35 +30,10 @@ urlpatterns += (
     url(r'^api/', include(router.urls, namespace='api')),
 )
 
-#---------Class based app--------
 home_patterns = patterns('',
     url(r'^$', views.HomeView.as_view(), name='home'),
 )
-
-generic_crud_pattern = lambda table: patterns('',
-    url(r"^$", getattr(views,
-        ''.join([table,'ListView'])).as_view(), name="list"),
-    url(r'^create/$', getattr(views,
-        ''.join([table,'CreateView'])).as_view(), name='create'),
-    url(r"^id/(?P<pk>\d+)/$", getattr(views,
-        ''.join([table,'DetailView'])).as_view(), name="detail"),
-)
-
 setattr(app_urls, 'xapp_patterns', home_patterns)
-
-for table in tables:
-    table_name = table.__name__.lower()
-    setattr(app_urls,
-        ''.join([table_name,'_patterns']),
-        generic_crud_pattern(table_name.capitalize()))
-
-    urlpatterns += (
-        url(r''.join([r'^', table_name, r'/']),
-            include(getattr(app_urls,
-                ''.join([table_name,'_patterns'])),
-            namespace=table_name)),
-    )
-
 urlpatterns += (
     url(r'^', include(xapp_patterns, namespace=app_module)),
 )
