@@ -273,3 +273,26 @@ class RequestTest(TestCase):
         self.assertIn('"paycheck": 40', response.content.decode('utf-8'))
         self.assertIn('"date_joined": "04/01/2014"', response.content.decode('utf-8'))
         self.assertNotIn('"name": "A"', response.content.decode('utf-8'))
+
+    def test_patch_users(self):
+        from rest_framework.test import APIClient
+        client = APIClient()
+        from xapp.models import tables
+        from xapp.models import Users
+        d = {'name':'A', 'paycheck':'10', 'date_joined': '2014-01-01'}
+        Users.create_from_dict(d)
+        d = {'name':'B', 'paycheck':'20', 'date_joined': '01/01/2014'}
+        Users.create_from_dict(d)
+        d = {'name':'C', 'paycheck':'30', 'date_joined': '02-01-2014'}
+        Users.create_from_dict(d)
+
+        response = client.patch('/api/users/1/',
+            {'name':'D'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(u'application/json',
+            response._headers['content-type'][1])
+        self.assertIn('"name": "D"', response.content.decode('utf-8'))
+        self.assertIn('"paycheck": 10', response.content.decode('utf-8'))
+        self.assertIn('"date_joined": "01/01/2014"', response.content.decode('utf-8'))
+        self.assertNotIn('"name": "A"', response.content.decode('utf-8'))
