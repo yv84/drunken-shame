@@ -87,9 +87,9 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 DATE_INPUT_FORMATS = (
+    '%d/%m/%Y',
     '%d-%m-%Y',
     '%Y-%m-%d',
-    '%d/%m/%Y',
     '%d %m %Y',
     '%Y/%m/%d',
     '%Y %m %d',
@@ -124,5 +124,5 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny' #DjangoModelPermissionsOrAnonReadOnly'
     ],
     'DATE_FORMAT': DATE_INPUT_FORMATS[0],
-    'DATE_INPUT_FORMAT': DATE_INPUT_FORMATS[0],
+    # For Date Time string spec, see ECMA 262
 }

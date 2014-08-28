@@ -161,7 +161,7 @@ class RequestTest(TestCase):
         self.assertIn('/api/users/', response.content.decode('utf-8'))
         self.assertIn('/api/rooms/', response.content.decode('utf-8'))
 
-    def test_get_rooms(self):
+    def test_get_list_rooms(self):
         from xapp.models import tables
         from xapp.models import Rooms
         d = {'department':'A', 'spots':'10'}
@@ -187,7 +187,7 @@ class RequestTest(TestCase):
         self.assertIn('"spots": 30', response.content.decode('utf-8'))
         self.assertNotIn('"spots": "10"', response.content.decode('utf-8'))
 
-    def test_get_users(self):
+    def test_get_list_users(self):
         from xapp.models import tables
         from xapp.models import Users
         d = {'name':'A', 'paycheck':'10', 'date_joined': '2014-01-01'}
@@ -213,9 +213,9 @@ class RequestTest(TestCase):
         self.assertIn('"paycheck": 30', response.content.decode('utf-8'))
         self.assertNotIn('"paycheck": "10"', response.content.decode('utf-8'))
 
-        self.assertNotIn('"date_joined": "2014-01-01"', response.content.decode('utf-8'))
-        self.assertIn('"date_joined": "01-01-2014"', response.content.decode('utf-8'))
-        self.assertIn('"date_joined": "02-01-2014"', response.content.decode('utf-8'))
+        self.assertNotIn('"date_joined": "2014/01/01"', response.content.decode('utf-8'))
+        self.assertIn('"date_joined": "01/01/2014"', response.content.decode('utf-8'))
+        self.assertIn('"date_joined": "02/01/2014"', response.content.decode('utf-8'))
 
 
     def test_delete_users(self):
@@ -232,3 +232,44 @@ class RequestTest(TestCase):
         self.assertEqual(405, response.status_code)
         self.assertEqual(u'application/json',
             response._headers['content-type'][1])
+
+
+    def test_get_detail_users(self):
+        from xapp.models import tables
+        from xapp.models import Users
+        d = {'name':'A', 'paycheck':'10', 'date_joined': '2014-01-01'}
+        Users.create_from_dict(d)
+        d = {'name':'B', 'paycheck':'20', 'date_joined': '01/01/2014'}
+        Users.create_from_dict(d)
+        d = {'name':'C', 'paycheck':'30', 'date_joined': '02-01-2014'}
+        Users.create_from_dict(d)
+        response = self.csrf_client.get('/api/users/1/',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(u'application/json',
+            response._headers['content-type'][1])
+        self.assertIn('"name": "A"', response.content.decode('utf-8'))
+        self.assertIn('"paycheck": 10', response.content.decode('utf-8'))
+        self.assertIn('"date_joined": "01/01/2014"', response.content.decode('utf-8'))
+        self.assertNotIn('"name": "B"', response.content.decode('utf-8'))
+
+
+    def test_post_users(self):
+        from xapp.models import tables
+        from xapp.models import Users
+        d = {'name':'A', 'paycheck':'10', 'date_joined': '2014-01-01'}
+        Users.create_from_dict(d)
+        d = {'name':'B', 'paycheck':'20', 'date_joined': '01/01/2014'}
+        Users.create_from_dict(d)
+        d = {'name':'C', 'paycheck':'30', 'date_joined': '02-01-2014'}
+        Users.create_from_dict(d)
+        response = self.csrf_client.post('/api/users/',
+            {'name':'D', 'paycheck':'40', 'date_joined': '2014-01-04'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(u'application/json',
+            response._headers['content-type'][1])
+        self.assertIn('"name": "D"', response.content.decode('utf-8'))
+        self.assertIn('"paycheck": 40', response.content.decode('utf-8'))
+        self.assertIn('"date_joined": "04/01/2014"', response.content.decode('utf-8'))
+        self.assertNotIn('"name": "A"', response.content.decode('utf-8'))
