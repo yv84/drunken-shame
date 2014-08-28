@@ -47,7 +47,6 @@ INSTALLED_APPS = (
     'crispy_forms',
     'south',
     'xapp',
-    'accounts',
     'rest_framework',
 )
 

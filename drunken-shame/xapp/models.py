@@ -64,7 +64,7 @@ class ModelFuncMixin(object):
             except:
                 pass
 
-    def get_date_with_format(self, date_field: str,
+    def get_date_with_format(self, date_field,
                             formats=settings.DATE_INPUT_FORMATS):
         _date_field = getattr(self, date_field)
         formated_date = self.get_date_format(_date_field, formats)
@@ -73,7 +73,7 @@ class ModelFuncMixin(object):
         else:
             raise Exception("error DATE_INPUT_FORMATS")
 
-    def set_date_with_format(self, date_field: str, d: str,
+    def set_date_with_format(self, date_field, d,
                             formats=settings.DATE_INPUT_FORMATS):
         formated_date = self.get_date_format(d, formats)
         if formated_date == None:
