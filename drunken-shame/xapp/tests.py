@@ -73,16 +73,11 @@ class ModelTest(TestCase):
             u'Зарплата')
         self.assertEqual(Users.objects.all()[0].field_name('date_joined'),
             u'Дата поступления на работу')
-        N = None
-        for index in range(len(Users.objects.all()[0].get_all_tables())):
-            if Users.objects.all()[0].get_all_tables()[index]['sheet'] == \
-                    Users.objects.all()[0]._meta.verbose_name:
-                N = index
-        self.assertEqual(Users.objects.all()[0].get_all_tables()[N]['sheet'],
+        self.assertEqual(Users.objects.all()[0].get_all_tables()[0]['sheet'],
             u'Пользователи')
-        self.assertEqual(Users.objects.all()[0].get_all_tables()[N]['url'],
+        self.assertEqual(Users.objects.all()[0].get_all_tables()[0]['url'],
             u'/api/users/')
-        self.assertEqual(Users.objects.all()[0].get_all_tables()[N],
+        self.assertEqual(Users.objects.all()[0].get_all_tables()[0],
             {'fields': [{'id': 'id', 'name': 'ID', 'type': 'Auto'},
                 {'id': 'name', 'name': 'Имя', 'type': 'Char'},
                 {'id': 'paycheck', 'name': 'Зарплата', 'type': 'Integer'},
@@ -113,16 +108,11 @@ class ModelTest(TestCase):
             u'Отдел')
         self.assertEqual(Rooms.objects.all()[0].field_name('spots'),
             u'Вместимость')
-        N = None
-        for index in range(len(Rooms.objects.all()[0].get_all_tables())):
-            if Rooms.objects.all()[0].get_all_tables()[index]['sheet'] == \
-                    Rooms.objects.all()[0]._meta.verbose_name:
-                N = index
-        self.assertEqual(Rooms.objects.all()[0].get_all_tables()[N]['sheet'],
+        self.assertEqual(Rooms.objects.all()[0].get_all_tables()[1]['sheet'],
             u'Комнаты')
-        self.assertEqual(Rooms.objects.all()[0].get_all_tables()[N]['url'],
+        self.assertEqual(Rooms.objects.all()[0].get_all_tables()[1]['url'],
             u'/api/rooms/')
-        self.assertEqual(Rooms.objects.all()[0].get_all_tables()[N],
+        self.assertEqual(Rooms.objects.all()[0].get_all_tables()[1],
             {'fields': [{'id': 'id', 'name': 'ID', 'type': 'Auto'},
               {'id': 'department', 'name': 'Отдел', 'type': 'Char'},
               {'id': 'spots', 'name': 'Вместимость', 'type': 'Integer'}],
