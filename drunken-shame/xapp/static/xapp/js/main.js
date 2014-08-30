@@ -4,10 +4,16 @@ var ajax = (function () {
     set_url : function( url ) {
       _url = url;
     },
-    get : function(callback) {
+    get_tables : function(callback) {
       $.get( list_models_url, function( data ) {
-        var data = data[0];
-        return callback(data)
+        var data1 = data[0];
+        return callback(data1)
+      } );
+    },
+    get : function(callback) {
+      $.get( _url, function( data ) {
+        var data1 = data[0];
+        return callback(data1)
       } );
     },
     post : function(id, data, callback) {
@@ -27,34 +33,16 @@ var ajax = (function () {
 
 
 
+var SheetTable = function ( ) {
+};
 
-var get_sheets = ajax.get(function( data ) {
-  $("#sheet_name").unbind().find('div').remove();
-  _.each(data, function(element, index, sheets) {
-    $("#sheet_name").append('<div/>');
-    $("#sheet_name>div").last()
-      .append(element.sheet)
-      .on('click', function(e) {
-        ajax.set_url(element.url)
-        $('.strong').each( function( index ) {
-          $(this).removeClass('strong');
-        } );
-        $(this).addClass('strong');
-        return get_fields(element.fields, element.url, element.sheet);
-      } );
-  } );
-} );
-
-
-get_fields = function( sheet_schema, url, sheet_name ) {
+SheetTable.prototype.get_ajax_data = function( sheet_schema, url, sheet_name ) {
   $.get(url, function( data ) {
-    filling_table(sheet_schema, data, sheet_name)
+    sheetTable.create(sheet_schema, data, sheet_name);
   } );
 };
 
-
-
-filling_table = function( sheet_schema, data, sheet_name ) {
+SheetTable.prototype.prepHtml = function( sheet_name ) {
   $("#sheet_field>div").remove();
   $("#object_form>div").remove();
   $("#sheet_field").append('<div/>');
@@ -64,16 +52,23 @@ filling_table = function( sheet_schema, data, sheet_name ) {
   $("#object_form>div>p").text(sheet_name+' добавить:');
   $("#sheet_field>div").unbind().find('table').remove();
   $("#sheet_field>div").append('<table/>');
-  var dataSet = []
-  var dataRow = []
+}
 
-  _.each(data , function( row, index, data ) {
-      dataRow = []
+SheetTable.prototype.getDataSet = function( sheet_schema, table_data ) {
+  var dataSet = [];
+  var dataRow = [];
+
+  _.each(table_data , function( row, index, data ) {
+      dataRow = [];
       _.each(sheet_schema , function( column, index, sheet_schema ) {
           dataRow.push(row[column.id]);
       });
       dataSet.push(dataRow);
   } );
+  return dataSet;
+}
+
+SheetTable.prototype.showTable = function( dataSet, sheet_schema ) {
   var Columns = [];
   var aoColumns = []
   $('#object_form>div').append('<form action="" input type="submit" value="Submit"></form>');
@@ -116,6 +111,10 @@ filling_table = function( sheet_schema, data, sheet_name ) {
       "aLengthMenu": [[-1, 10, 25, 50, 100, 200, ],
                     ["All", 10, 25, 50, 100, 200, ]],
   } );
+}
+
+
+SheetTable.prototype.addRow = function( ) {
   $('#sheet_field>div').on( 'addRow', function ( event ) {
     var row = Array.prototype.slice.call(arguments).slice(1);
     table.row.add( row ).draw();
@@ -130,12 +129,16 @@ filling_table = function( sheet_schema, data, sheet_name ) {
       editCell($(this), new RegExp("^\\d{1,15}$"));
     } );
   } );
-  $('#sheet_field>div thead').find('.ID').removeClass('ID')
-  $('#sheet_field>div thead').find('.Integer').removeClass('Integer')
-  $('#sheet_field>div thead').find('.Char').removeClass('Char')
-  $('#sheet_field>div thead').find('.Date').removeClass('Date')
-  $('#sheet_field>div>table')
+}
 
+SheetTable.prototype.setupTableHeaders = function( ) {
+  $('#sheet_field>div thead').find('.ID').removeClass('ID');
+  $('#sheet_field>div thead').find('.Integer').removeClass('Integer');
+  $('#sheet_field>div thead').find('.Char').removeClass('Char');
+  $('#sheet_field>div thead').find('.Date').removeClass('Date');
+}
+
+SheetTable.prototype.createEventsForCells = function( ) {
   $('.Date').on('click', function (e) {
     editDateCell($(this));
   } );
@@ -149,7 +152,44 @@ filling_table = function( sheet_schema, data, sheet_name ) {
     createRecord()
     return false;
   } );
+}
+
+SheetTable.prototype.create = function( sheet_schema, data, sheet_name ) {
+  this.prepHtml(sheet_name);
+  var dataSet = this.getDataSet(sheet_schema, data);
+  this.showTable(dataSet, sheet_schema);
+  this.addRow();
+  this.setupTableHeaders();
+  this.createEventsForCells();
 };
+
+
+
+
+
+
+
+
+
+
+var InputElement = function ( ) {
+
+};
+
+InputElement.prototype.show = function ( ) {
+
+};
+
+InputElement.prototype.hide = function ( ) {
+
+};
+
+
+
+
+
+
+
 
 editCell = function (cell, reg_patt) {
   cell.one('click', function (e) {
@@ -244,3 +284,40 @@ createRecord = function (data) {
   };
   return false;
 }
+
+
+
+
+var SheetList = function ( ) {
+  sheetTable = new SheetTable();
+};
+
+SheetList.prototype.hire = function() {
+  ajax.get_tables(function( data ) {
+    $("#sheet_name").unbind().find('div').remove();
+    _.each(data, function(element, index, sheets) {
+      $("#sheet_name").append('<div/>');
+      $("#sheet_name>div").last()
+        .append(element.sheet)
+        .on('click', function(e) {
+          ajax.set_url(element.url)
+          $('.strong').each( function( index ) {
+            $(this).removeClass('strong');
+          } );
+          $(this).addClass('strong');
+          return sheetTable.get_ajax_data(element.fields, element.url, element.sheet);
+        } );
+    } );
+  } );
+};
+
+
+
+
+
+
+
+$( document ).ready(function() {
+  var sheetList = new SheetList();
+  sheetList.hire();
+} );
