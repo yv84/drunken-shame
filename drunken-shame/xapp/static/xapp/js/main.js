@@ -32,6 +32,25 @@ var ajax = (function () {
 
 
 
+var SheetTableSingleton = (function () {
+    var instance;
+ 
+    function createInstance() {
+        var object = new SheetTable();
+        return object;
+    }
+ 
+    return {
+        getInstance: function () {
+            if (!instance) {
+                instance = createInstance();
+            }
+            return instance;
+        }
+    };
+})();
+
+
 var SheetTable = function ( ) {
 };
 
@@ -146,20 +165,24 @@ SheetTable.prototype.createEventsForCells = function( ) {
   $('#sheet_field>div>').on('click', function (event) {
 
     var target = $( event.target );
-    console.log(target)
 
     if (target.is('.Date') ) {
-      editDateCell(target);  
+      tableElementManager.editCell(target,
+        new RegExp("^\\d{2}/\\d{2}/\\d{4}$"),
+        tableElementManager.appendDatepickerElement );  
     }
     else if (target.is('.Char') ) {
-      editCell(target, new RegExp("^\\w{1,99}$"));
+      tableElementManager.editCell(target,
+        new RegExp("^\\w{1,99}$"),
+        tableElementManager.appendInputElement);
     }
     else if (target.is('.Integer') ) {
-      editCell(target, new RegExp("^\\d{1,15}$"));
+      tableElementManager.editCell(target,
+        new RegExp("^\\d{1,15}$"),
+        tableElementManager.appendInputElement);
     }
     else {
       hideInput();
-      hideDateCell();
     }
   } );
 
@@ -180,95 +203,72 @@ SheetTable.prototype.create = function( sheet_schema, data, sheet_name ) {
 };
 
 
-var InputElement = function ( ) {
+tableElementManager = {
 
-};
+  appendInputElement : function ($cell) {
+    $cell.append(
+      '<p class="edit">' +
+        '<label class=edit for="p_scnts">' +
+        '<input type="text" id="p_scnt" class="edit" size="20"' +
+          'name="p_scnt_' + '"' +
+          'value="'+ $cell.attr('data-value') +'" placeholder="" />' +
+        '</label> <a href="#" id="okScnt">Ok</a>' +
+        '</label> <a href="#" id="remScnt">Отмена</a>' +
+      '</p>'
+    )
+    return $('#p_scnt')
+  },
 
-InputElement.prototype.show = function ( ) {
+  appendDatepickerElement : function ($cell) {
+    $date_input = tableElementManager.appendInputElement($cell)
+    $("#p_scnt").datepicker({
+      dateFormat: 'dd/mm/yy',
+    } );
+  },
 
-};
 
-InputElement.prototype.hide = function ( ) {
-
-};
-
-
-editCell = function ($cell, reg_patt) {
-  $('.hasDatepicker').each( function( index ) {
-    $(this).remove();
-  } );
-  $('.edit-hidden').each( function( index ) {
-    $(this).text($(this).attr('data-value'));
-    $(this).removeClass('edit-hidden');
-  });
-  $cell.attr('data-value', $cell.text());
-  $cell.addClass('edit-hidden').text('');
-  $cell.append(
-    '<p class="edit">' +
-    '<label class=edit for="p_scnts">' +
-    '<input type="text" id="p_scnt" class="edit" size="20"' +
-      'name="p_scnt_' + '"' +
-      'value="'+ $cell.attr('data-value') +'" placeholder="" />' +
-    '</label> <a href="#" id="okScnt">Ok</a>' +
-    '</label> <a href="#" id="remScnt">Отмена</a>' +
-    '</p>'
-  );
-  $(".edit").on('click', function (e) {
+  editCell : function ($cell, reg_patt, input_type) {
+    tableElementManager.hideInput();
+    $cell.attr('data-value', $cell.text());
+    $cell.addClass('edit-hidden').text('');
+    input_type($cell);
+    $(".edit").on('click', function (e) {
+      return false;
+    } );
+    $("#okScnt").on('click', function (e) {
+      if (reg_patt.test($cell.find('#p_scnt')[0].value)){
+          tableElementManager.saveInput($cell, reg_patt);
+      }
+      return false;
+    } );
+    $("#remScnt").on('click', function (e) {
+      tableElementManager.hideInput();
+      return false;
+    } );
+    $("#p_scnt").focus().val($cell.attr('data-value'));
     return false;
-  } );
-  $("#okScnt").on('click', function (e) {
-    if (reg_patt.test($cell.find('#p_scnt')[0].value)){
-        saveInput($cell, reg_patt);
-    }
-    return false;
-  } );
-  $("#remScnt").on('click', function (e) {
-    hideInput();
-    return false;
-  } );
-  $("#p_scnt").focus().val($cell.attr('data-value'));
-  return false;
-};
-saveInput = function ($cell, reg_patt) {
-  $('.edit-hidden').each( function( index ) {
-    $(this).text($cell.find('#p_scnt')[0].value);
-    $(this).removeClass('edit-hidden');
-  } );
-  return false;
-};
-hideInput = function () {
-  $('.edit-hidden').each( function( index ) {
-    $(this).text($(this).attr('data-value'));
-    $(this).removeClass('edit-hidden');
-  } );
-  return false;
-};
+  },
 
-editDateCell = function ($cell) {
-  hideInput();
-  $('#datapicker').each( function( index ) {
-    $(this).remove()
-  } );
-  $cell.append('<div class="hasDatepicker">' +
-                '<div id="datapicker"></div>' +
-              '</div>'
-  );
-  $("#datapicker").datepicker({
-    dateFormat: 'dd/mm/yy',
-    onSelect: function(dateText, inst) {
-        $cell.text(dateText);
-        $("body").trigger('click');
-    }
-  } );
-  return false
-};
-hideDateCell =  function () {
-  $('#datapicker').each( function( index ) {
-    $(this).remove()
-  } );
-  return false;
-};
+  saveInput : function ($cell, reg_patt) {
+    $('.edit-hidden').each( function( index ) {
+      $(this).text($cell.find('#p_scnt')[0].value);
+      $(this).removeClass('edit-hidden');
+    } );
+    return false;
+  },
 
+  hideInput : function () {
+    $('.edit-hidden').each( function( index ) {
+      $(this).text($(this).attr('data-value'));
+      $(this).removeClass('edit-hidden');
+    } );
+    $('#datapicker').each( function( index ) {
+      $(this).remove()
+    } );
+    return false;
+  },
+
+}
 
 createRecord = function (data) {
   data = data || {
@@ -283,7 +283,6 @@ createRecord = function (data) {
 
 
 var SheetList = function ( ) {
-  sheetTable = new SheetTable();
 };
 
 SheetList.prototype.hire = function() {
@@ -299,7 +298,9 @@ SheetList.prototype.hire = function() {
             $(this).removeClass('strong');
           } );
           $(this).addClass('strong');
-          return sheetTable.get_ajax_data(element.fields, element.sheet);
+          sheetTable = SheetTableSingleton.getInstance();
+          sheetTable.get_ajax_data(element.fields, element.sheet);
+          return
         } );
     } );
   } );
