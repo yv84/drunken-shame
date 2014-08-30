@@ -12,8 +12,7 @@ var ajax = (function () {
     },
     get : function(callback) {
       $.get( _url, function( data ) {
-        var data1 = data[0];
-        return callback(data1)
+        return callback(data)
       } );
     },
     post : function(id, data, callback) {
@@ -36,8 +35,8 @@ var ajax = (function () {
 var SheetTable = function ( ) {
 };
 
-SheetTable.prototype.get_ajax_data = function( sheet_schema, url, sheet_name ) {
-  $.get(url, function( data ) {
+SheetTable.prototype.get_ajax_data = function( sheet_schema, sheet_name ) {
+  ajax.get(function( data ) {
     sheetTable.create(sheet_schema, data, sheet_name);
   } );
 };
@@ -68,10 +67,24 @@ SheetTable.prototype.getDataSet = function( sheet_schema, table_data ) {
   return dataSet;
 }
 
+SheetTable.prototype.showForm = function( dataSet, sheet_schema ) {
+  $('#object_form>div').append('<form action="" input type="submit" value="Submit"></form>');
+  _.each(sheet_schema , function( column, index, sheet_schema ) {
+      $('#object_form>div>form').append(
+          '<p class="">' +
+          '<label for="'+ column.id + '">'+ column.name +
+          '<input type="text" id="' + column.id + '" size="20"' +
+            'name="' + column.name + '"' +
+            'value="" placeholder="" />' +
+          '</p>'
+      );
+  } );
+  $('#object_form>div>form').append('<input type="submit" value="Submit">');
+};
+
 SheetTable.prototype.showTable = function( dataSet, sheet_schema ) {
   var Columns = [];
   var aoColumns = []
-  $('#object_form>div').append('<form action="" input type="submit" value="Submit"></form>');
   _.each(sheet_schema , function( column, index, sheet_schema ) {
       Columns.push({ "title": column.name });
       if (column.type == "Date") {
@@ -83,16 +96,7 @@ SheetTable.prototype.showTable = function( dataSet, sheet_schema ) {
       } else {
         aoColumns.push({ "sTitle": column.name, });
       };
-      $('#object_form>div>form').append(
-          '<p class="">' +
-          '<label for="'+ column.id + '">'+ column.name +
-          '<input type="text" id="' + column.id + '" size="20"' +
-            'name="' + column.name + '"' +
-            'value="" placeholder="" />' +
-          '</p>'
-      );
   } );
-  $('#object_form>div>form').append('<input type="submit" value="Submit">');
   $('#sheet_field>table')
     .html( '<table' +
         'cellpadding="0" cellspacing="0" border="0"' +
@@ -139,37 +143,41 @@ SheetTable.prototype.setupTableHeaders = function( ) {
 }
 
 SheetTable.prototype.createEventsForCells = function( ) {
-  $('.Date').on('click', function (e) {
-    editDateCell($(this));
+  $('#sheet_field>div>').on('click', function (event) {
+
+    var target = $( event.target );
+    console.log(target)
+
+    if (target.is('.Date') ) {
+      editDateCell(target);  
+    }
+    else if (target.is('.Char') ) {
+      editCell(target, new RegExp("^\\w{1,99}$"));
+    }
+    else if (target.is('.Integer') ) {
+      editCell(target, new RegExp("^\\d{1,15}$"));
+    }
+    else {
+      hideInput();
+      hideDateCell();
+    }
   } );
-  $('.Char').each( function( index ) {
-    editCell($(this), new RegExp("^\\w{1,99}$"));
-  } );
-  $('.Integer').each( function( index ) {
-    editCell($(this), new RegExp("^\\d{1,15}$"));
-  } );
-  $('#object_form>div').click(function() {
-    createRecord()
-    return false;
-  } );
+
+  // $('#object_form>div').click(function() {
+  //   createRecord()
+  //   return false;
+  // } );
 }
 
 SheetTable.prototype.create = function( sheet_schema, data, sheet_name ) {
   this.prepHtml(sheet_name);
   var dataSet = this.getDataSet(sheet_schema, data);
   this.showTable(dataSet, sheet_schema);
+  this.showForm(dataSet, sheet_schema);
   this.addRow();
   this.setupTableHeaders();
   this.createEventsForCells();
 };
-
-
-
-
-
-
-
-
 
 
 var InputElement = function ( ) {
@@ -185,94 +193,80 @@ InputElement.prototype.hide = function ( ) {
 };
 
 
-
-
-
-
-
-
-editCell = function (cell, reg_patt) {
-  cell.one('click', function (e) {
-    $('.hasDatepicker').each( function( index ) {
-      $(this).remove();
-    } );
-    $('.edit-hidden').each( function( index ) {
-      $(this).text($(this).attr('data-value'));
-      editCell($(this), reg_patt);
-      $(this).removeClass('edit-hidden');
-    });
-    $(this).attr('data-value', $(this).text());
-    $(this).addClass('edit-hidden').text('');
-    $(this).append(
-        '<p class="edit">' +
-        '<label class=edit for="p_scnts">' +
-        '<input type="text" id="p_scnt" class="edit" size="20"' +
-          'name="p_scnt_' + '"' +
-          'value="'+ $(this).attr('data-value') +'" placeholder="" />' +
-        '</label> <a href="#" id="okScnt">Ok</a>' +
-        '</label> <a href="#" id="remScnt">Отмена</a>' +
-        '</p>'
-    );
-    $(this).unbind();
-    $(".edit").on('click', function (e) {
-      return false;
-    } );
-    $("#okScnt").on('click', function (e) {
-      if (reg_patt.test($(cell).find('#p_scnt')[0].value)){
-          saveInput(cell, reg_patt);
-      }
-      return false;
-    } );
-    $("#p_scnt").focus().val($(this).attr('data-value'));;
-    setTimeout(function() {
-      $("body :not(.Integer, .Char, .edit)").on('click', function (e) {
-        hideInput($(this), reg_patt);
-        return true;
-      } );
-    }, 200);
-    return false;
+editCell = function ($cell, reg_patt) {
+  $('.hasDatepicker').each( function( index ) {
+    $(this).remove();
   } );
-};
-saveInput = function (cell, reg_patt) {
-  $('.edit-hidden').each( function( index ) {
-    $(this).text($(cell).find('#p_scnt')[0].value);
-    editCell($(this), reg_patt);
-    $(this).removeClass('edit-hidden');
-  } );
-  return false;
-};
-hideInput = function (cell, reg_patt) {
   $('.edit-hidden').each( function( index ) {
     $(this).text($(this).attr('data-value'));
-    editCell($(this), reg_patt);
+    $(this).removeClass('edit-hidden');
+  });
+  $cell.attr('data-value', $cell.text());
+  $cell.addClass('edit-hidden').text('');
+  $cell.append(
+    '<p class="edit">' +
+    '<label class=edit for="p_scnts">' +
+    '<input type="text" id="p_scnt" class="edit" size="20"' +
+      'name="p_scnt_' + '"' +
+      'value="'+ $cell.attr('data-value') +'" placeholder="" />' +
+    '</label> <a href="#" id="okScnt">Ok</a>' +
+    '</label> <a href="#" id="remScnt">Отмена</a>' +
+    '</p>'
+  );
+  $(".edit").on('click', function (e) {
+    return false;
+  } );
+  $("#okScnt").on('click', function (e) {
+    if (reg_patt.test($cell.find('#p_scnt')[0].value)){
+        saveInput($cell, reg_patt);
+    }
+    return false;
+  } );
+  $("#remScnt").on('click', function (e) {
+    hideInput();
+    return false;
+  } );
+  $("#p_scnt").focus().val($cell.attr('data-value'));
+  return false;
+};
+saveInput = function ($cell, reg_patt) {
+  $('.edit-hidden').each( function( index ) {
+    $(this).text($cell.find('#p_scnt')[0].value);
+    $(this).removeClass('edit-hidden');
+  } );
+  return false;
+};
+hideInput = function () {
+  $('.edit-hidden').each( function( index ) {
+    $(this).text($(this).attr('data-value'));
     $(this).removeClass('edit-hidden');
   } );
   return false;
 };
 
-editDateCell = function (cell) {
-    $('#datapicker').each( function( index ) {
-      $(this).remove()
-    } );
-    cell.append('<div class="hasDatepicker">' +
-                  '<div id="datapicker"></div>' +
-                '</div>'
-    );
-    $("#datapicker").datepicker({
-      dateFormat: 'dd/mm/yy',
-      onSelect: function(dateText, inst) {
-          cell.text(dateText);
-          $("body").trigger('click');
-      }
-    } );
-    setTimeout(function() {
-      $("body").one("click", function (e) {
-        $('.hasDatepicker').each( function( index ) {
-          $(this).remove();
-        } );
-        return true;
-      } );
-    }, 200);
+editDateCell = function ($cell) {
+  hideInput();
+  $('#datapicker').each( function( index ) {
+    $(this).remove()
+  } );
+  $cell.append('<div class="hasDatepicker">' +
+                '<div id="datapicker"></div>' +
+              '</div>'
+  );
+  $("#datapicker").datepicker({
+    dateFormat: 'dd/mm/yy',
+    onSelect: function(dateText, inst) {
+        $cell.text(dateText);
+        $("body").trigger('click');
+    }
+  } );
+  return false
+};
+hideDateCell =  function () {
+  $('#datapicker').each( function( index ) {
+    $(this).remove()
+  } );
+  return false;
 };
 
 
@@ -305,7 +299,7 @@ SheetList.prototype.hire = function() {
             $(this).removeClass('strong');
           } );
           $(this).addClass('strong');
-          return sheetTable.get_ajax_data(element.fields, element.url, element.sheet);
+          return sheetTable.get_ajax_data(element.fields, element.sheet);
         } );
     } );
   } );
