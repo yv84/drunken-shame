@@ -34,10 +34,10 @@ var ajax = (function () {
         type : 'PATCH',
         data : JSON.stringify(data),
         success : function(response, textStatus, jqXhr) {
-          callback();
+          return callback();
         },
         error : function(jqXHR, textStatus, errorThrown) {
-          errback();
+          return errback();
         },
         complete : function() {
         }
@@ -230,7 +230,7 @@ SheetTable.prototype.createEventsForCells = function( columnsId ) {
       );
     }
     else {
-      tableElementManager.hideInput(columnsId);
+      tableElementManager.saveInput(columnsId);
     }
   } );
 
@@ -296,7 +296,7 @@ tableElementManager = {
   },
 
   editCell : function ($cell, validator, input_type, columnsId) {
-    tableElementManager.hideInput(columnsId);
+    tableElementManager.saveInput(columnsId);
     $cell.attr('data-value', $cell.text());
     $cell.addClass('edit-hidden').text('');
     input_type($cell);
@@ -307,27 +307,32 @@ tableElementManager = {
     return false;
   },
 
-  hideInput : function ( columnsId ) {
+  hideInput : function ( $cell, value ) {
+    $cell.text(value);
+    $cell.removeClass('edit-hidden');
+    $cell.removeAttr('data-value');
+  },
+
+  saveInput : function ( columnsId ) {
     $('.edit-hidden').each( function( index ) {
-      if (validator.validate($(this))) {
-        var value = $(this).find('#p_scnt')[0].value
+      $cell = $(this)
+      var newValue = $cell.find('#p_scnt')[0].value
+      var oldValue = $cell.attr('data-value')
+      if (newValue != oldValue && validator.validate($cell)) {
         data = {}
-        data[columnsId[$(this).index()]] = value
+        data[columnsId[$(this).index()]] = newValue
 
         ajax.patch(
-          $(this).parent().children('.ID').text(),
+          $cell.parent().children('.ID').text(),
           data,
           function () {
-            $(this).attr('data-value', value);
-          },
+            tableElementManager.hideInput($cell, newValue);          },
           function () {
-            $(this).attr('data-value', value);
+            tableElementManager.hideInput($cell, oldValue);
           }
         );
       } else {
-        $(this).text($(this).attr('data-value'));
-        $(this).removeClass('edit-hidden');
-        $(this).removeAttr('data-value');
+        tableElementManager.hideInput($cell, oldValue);
       };
     } );
     $('#datapicker').each( function( index ) {
