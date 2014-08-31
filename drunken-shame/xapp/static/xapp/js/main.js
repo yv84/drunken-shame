@@ -18,14 +18,30 @@ var ajax = (function () {
     post : function(id, data, callback) {
       data.csrfmiddlewaretoken = csrf_token
       JSON.stringify(data)
-      $.post(_url, data)
-      return callback
+      $.post(_url+id, data, function( data ) {
+        return callback(data)
+      } );
     },
-    patch : function(id, data, callback) {
-      data.csrfmiddlewaretoken = csrf_token
-      JSON.stringify(data)
-      $.patch(_url+id, data)
-      return callback
+    patch : function(id, data, callback, errback) {
+      // data.csrfmiddlewaretoken = csrf_token
+      $.ajax({
+        headers : {
+          'Accept' : 'application/json',
+          'Content-Type' : 'application/json',
+          "Access-Control-Allow-Methods" : "GET, POST, PATCH, PUT"
+        },
+        url : _url+id,
+        type : 'PATCH',
+        data : JSON.stringify(data),
+        success : function(response, textStatus, jqXhr) {
+          callback();
+        },
+        error : function(jqXHR, textStatus, errorThrown) {
+          errback();
+        },
+        complete : function() {
+        }
+      });
     }
   };
 }());
@@ -109,6 +125,15 @@ SheetTable.prototype.showForm = function( dataSet ) {
   $('#object_form>div>form').append('<input type="submit" value="Submit">');
 };
 
+SheetTable.prototype.getColumnId = function( ) {
+  self = this;
+  var Columns = [];
+  _.each(self.sheet_schema , function( column, index, sheet_schema ) {
+        Columns.push(column.id);
+  } );
+  return Columns;
+};
+
 SheetTable.prototype.showTable = function( dataSet ) {
   self = this
   var Columns = [];
@@ -121,6 +146,8 @@ SheetTable.prototype.showTable = function( dataSet ) {
         aoColumns.push({ "sClass": "Integer ", "sTitle": column.name, });
       } else if (column.type == "Char") {
         aoColumns.push({ "sClass": "Char ", "sTitle": column.name, });
+      } else if (column.type == "Auto") {
+        aoColumns.push({ "sClass": "ID ", "sTitle": column.name, });
       } else {
         aoColumns.push({ "sTitle": column.name, });
       };
@@ -143,6 +170,7 @@ SheetTable.prototype.showTable = function( dataSet ) {
       "aLengthMenu": [[-1, 10, 25, 50, 100, 200, ],
                     ["All", 10, 25, 50, 100, 200, ]],
   } );
+  return table;
 }
 
 
@@ -170,7 +198,7 @@ SheetTable.prototype.setupTableHeaders = function( ) {
   $('#sheet_field>div thead').find('.Date').removeClass('Date');
 }
 
-SheetTable.prototype.createEventsForCells = function( ) {
+SheetTable.prototype.createEventsForCells = function( columnsId ) {
   validator = new Vadidator(
     new RegExp("^\\d{2}/\\d{2}/\\d{4}$"),
     new RegExp("^\\d{1,15}$"),
@@ -183,20 +211,26 @@ SheetTable.prototype.createEventsForCells = function( ) {
     if (target.is('.Date') ) {
       tableElementManager.editCell(target,
         validator,
-        tableElementManager.appendDatepickerElement );  
+        tableElementManager.appendDatepickerElement,
+        columnsId
+      );  
     }
     else if (target.is('.Char') ) {
       tableElementManager.editCell(target,
         validator,
-        tableElementManager.appendInputElement);
+        tableElementManager.appendInputElement,
+        columnsId
+      );
     }
     else if (target.is('.Integer') ) {
       tableElementManager.editCell(target,
         validator,
-        tableElementManager.appendInputElement);
+        tableElementManager.appendInputElement,
+        columnsId
+      );
     }
     else {
-      tableElementManager.hideInput();
+      tableElementManager.hideInput(columnsId);
     }
   } );
 
@@ -211,9 +245,10 @@ SheetTable.prototype.create = function( data ) {
   var dataSet = this.getDataSet(data);
   this.showTable(dataSet, this.sheet_schema);
   this.showForm(dataSet, this.sheet_schema);
+  var columnsId = this.getColumnId();
   this.addRow();
   this.setupTableHeaders();
-  this.createEventsForCells();
+  this.createEventsForCells(columnsId);
 };
 
 Vadidator = function ( date, integer, char ) {
@@ -260,8 +295,8 @@ tableElementManager = {
     } );
   },
 
-  editCell : function ($cell, validator, input_type) {
-    tableElementManager.hideInput();
+  editCell : function ($cell, validator, input_type, columnsId) {
+    tableElementManager.hideInput(columnsId);
     $cell.attr('data-value', $cell.text());
     $cell.addClass('edit-hidden').text('');
     input_type($cell);
@@ -272,13 +307,28 @@ tableElementManager = {
     return false;
   },
 
-  hideInput : function () {
+  hideInput : function ( columnsId ) {
     $('.edit-hidden').each( function( index ) {
       if (validator.validate($(this))) {
-        $(this).attr('data-value', $(this).find('#p_scnt')[0].value);
+        var value = $(this).find('#p_scnt')[0].value
+        data = {}
+        data[columnsId[$(this).index()]] = value
+
+        ajax.patch(
+          $(this).parent().children('.ID').text(),
+          data,
+          function () {
+            $(this).attr('data-value', value);
+          },
+          function () {
+            $(this).attr('data-value', value);
+          }
+        );
+      } else {
+        $(this).text($(this).attr('data-value'));
+        $(this).removeClass('edit-hidden');
+        $(this).removeAttr('data-value');
       };
-      $(this).text($(this).attr('data-value'));
-      $(this).removeClass('edit-hidden');
     } );
     $('#datapicker').each( function( index ) {
       $(this).remove()
