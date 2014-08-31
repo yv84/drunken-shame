@@ -15,14 +15,12 @@ var ajax = (function () {
         return callback(data)
       } );
     },
-    post : function(id, data, callback) {
-      data.csrfmiddlewaretoken = csrf_token
-      JSON.stringify(data)
-      $.post(_url+id, data, function( data ) {
+    post : function(data, callback) {
+      $.post(_url, data, function( data ) {
         return callback(data)
       } );
     },
-    patch : function(id, data, callback, errback) {
+    patch : function(id, _data, callback, errback) {
       // data.csrfmiddlewaretoken = csrf_token
       $.ajax({
         headers : {
@@ -32,7 +30,7 @@ var ajax = (function () {
         },
         url : _url+id,
         type : 'PATCH',
-        data : JSON.stringify(data),
+        data : JSON.stringify(_data),
         success : function(response, textStatus, jqXhr) {
           return callback();
         },
@@ -109,20 +107,47 @@ SheetTable.prototype.getDataSet = function( table_data ) {
   return dataSet;
 }
 
-SheetTable.prototype.showForm = function( dataSet ) {
+SheetTable.prototype.showForm = function( dataSet, validator ) {
   self = this
-  $('#object_form>div').append('<form action="" input type="submit" value="Submit"></form>');
+  $('#object_form>div').append(
+    '<form id="addRowForm" input type="submit" value="Submit" action="">' +
+    '</form>'
+  );
   _.each(self.sheet_schema , function( column, index, sheet_schema ) {
+    if (column.id != 'id') {
       $('#object_form>div>form').append(
           '<p class="">' +
           '<label for="'+ column.id + '">'+ column.name +
           '<input type="text" id="' + column.id + '" size="20"' +
-            'name="' + column.name + '"' +
+            'class="' + column.type +'"' +
+            'name="' + column.id + '"' +
             'value="" placeholder="" />' +
           '</p>'
       );
+    };
   } );
-  $('#object_form>div>form').append('<input type="submit" value="Submit">');
+  $('#object_form>div>form').append('<input type="submit" value="Submit" action="">');
+  $('#addRowForm').submit(function() {
+    var values = {};
+    var form_valid = true;
+    $.each($('#addRowForm').serializeArray(), function(i, field) {
+        form_valid &= validator.validate($('#addRowForm #'+field.name), field.value);
+        if ($('#addRowForm #'+field.name).is('.Integer')) {
+          values[field.name] = +field.value;
+        } else if ($('#addRowForm #'+field.name).is('.Date')) {
+          values[field.name] = field.value; // dd/mm/yyyy -> yyyy-mm-dd
+        } else {
+          values[field.name] = field.value;
+        }
+    });
+    if (form_valid) {
+      ajax.post(values, function ( ) {
+          console.log('POST');
+        }
+      );
+    };
+    return false;
+  });
 };
 
 SheetTable.prototype.getColumnId = function( ) {
@@ -198,12 +223,8 @@ SheetTable.prototype.setupTableHeaders = function( ) {
   $('#sheet_field>div thead').find('.Date').removeClass('Date');
 }
 
-SheetTable.prototype.createEventsForCells = function( columnsId ) {
-  validator = new Vadidator(
-    new RegExp("^\\d{2}/\\d{2}/\\d{4}$"),
-    new RegExp("^\\d{1,15}$"),
-    new RegExp("^\\w{1,99}$")
-  );
+SheetTable.prototype.createEventsForCells = function( validator, columnsId ) {
+  
   $('#sheet_field>div>').on('click', function (event) {
 
     var target = $( event.target );
@@ -234,21 +255,22 @@ SheetTable.prototype.createEventsForCells = function( columnsId ) {
     }
   } );
 
-  // $('#object_form>div').click(function() {
-  //   createRecord()
-  //   return false;
-  // } );
 }
 
 SheetTable.prototype.create = function( data ) {
   this.prepHtml();
+  validator = new Vadidator(
+    new RegExp("^\\d{2}/\\d{2}/\\d{4}$"),
+    new RegExp("^\\d{1,15}$"),
+    new RegExp("^\\w{1,99}$")
+  );
   var dataSet = this.getDataSet(data);
-  this.showTable(dataSet, this.sheet_schema);
-  this.showForm(dataSet, this.sheet_schema);
+  this.showTable(dataSet);
+  this.showForm(dataSet, validator);
   var columnsId = this.getColumnId();
   this.addRow();
   this.setupTableHeaders();
-  this.createEventsForCells(columnsId);
+  this.createEventsForCells(validator, columnsId);
 };
 
 Vadidator = function ( date, integer, char ) {
@@ -257,7 +279,7 @@ Vadidator = function ( date, integer, char ) {
   this.char = char;
 }
 
-Vadidator.prototype.validate = function ($cell) {
+Vadidator.prototype.validate = function ($cell, value) {
   if ($cell.is('.Char')) {
     reg_patt = this.char;
   } else if ($cell.is('.Integer')) {
@@ -267,7 +289,7 @@ Vadidator.prototype.validate = function ($cell) {
   } else {
     return false;
   }
-  if (reg_patt.test($cell.find('#p_scnt')[0].value)) {
+  if (reg_patt.test(value)) {
     return true;
   } else {
     return false;
@@ -318,7 +340,7 @@ tableElementManager = {
       $cell = $(this)
       var newValue = $cell.find('#p_scnt')[0].value
       var oldValue = $cell.attr('data-value')
-      if (newValue != oldValue && validator.validate($cell)) {
+      if (newValue != oldValue && validator.validate($cell, newValue)) {
         data = {}
         data[columnsId[$(this).index()]] = newValue
 
