@@ -50,35 +50,42 @@ var SheetTableSingleton = (function () {
     };
 })();
 
-
 var SheetTable = function ( ) {
+  this.sheet_schema = null;
+  this.sheet_name = null;
 };
 
-SheetTable.prototype.get_ajax_data = function( sheet_schema, sheet_name ) {
+SheetTable.prototype.setTableData = function ( sheet_schema, sheet_name ) {
+  this.sheet_schema = sheet_schema;
+  this.sheet_name = sheet_name;
+};
+
+SheetTable.prototype.get_ajax_data = function() {
   ajax.get(function( data ) {
-    sheetTable.create(sheet_schema, data, sheet_name);
+    sheetTable.create(data);
   } );
 };
 
-SheetTable.prototype.prepHtml = function( sheet_name ) {
+SheetTable.prototype.prepHtml = function() {
   $("#sheet_field>div").remove();
   $("#object_form>div").remove();
   $("#sheet_field").append('<div/>');
   $("#object_form").append('<div/>');
   $("#object_form>div").append('<p/>');
   $("#object_form").css("border", "inset 2px #a5a4a4");
-  $("#object_form>div>p").text(sheet_name+' добавить:');
+  $("#object_form>div>p").text(this.sheet_name+' добавить:');
   $("#sheet_field>div").unbind().find('table').remove();
   $("#sheet_field>div").append('<table/>');
 }
 
-SheetTable.prototype.getDataSet = function( sheet_schema, table_data ) {
+SheetTable.prototype.getDataSet = function( table_data ) {
+  self = this
   var dataSet = [];
   var dataRow = [];
 
   _.each(table_data , function( row, index, data ) {
       dataRow = [];
-      _.each(sheet_schema , function( column, index, sheet_schema ) {
+      _.each(self.sheet_schema , function( column, index, sheet_schema ) {
           dataRow.push(row[column.id]);
       });
       dataSet.push(dataRow);
@@ -86,9 +93,10 @@ SheetTable.prototype.getDataSet = function( sheet_schema, table_data ) {
   return dataSet;
 }
 
-SheetTable.prototype.showForm = function( dataSet, sheet_schema ) {
+SheetTable.prototype.showForm = function( dataSet ) {
+  self = this
   $('#object_form>div').append('<form action="" input type="submit" value="Submit"></form>');
-  _.each(sheet_schema , function( column, index, sheet_schema ) {
+  _.each(self.sheet_schema , function( column, index, sheet_schema ) {
       $('#object_form>div>form').append(
           '<p class="">' +
           '<label for="'+ column.id + '">'+ column.name +
@@ -101,10 +109,11 @@ SheetTable.prototype.showForm = function( dataSet, sheet_schema ) {
   $('#object_form>div>form').append('<input type="submit" value="Submit">');
 };
 
-SheetTable.prototype.showTable = function( dataSet, sheet_schema ) {
+SheetTable.prototype.showTable = function( dataSet ) {
+  self = this
   var Columns = [];
   var aoColumns = []
-  _.each(sheet_schema , function( column, index, sheet_schema ) {
+  _.each(self.sheet_schema , function( column, index, sheet_schema ) {
       Columns.push({ "title": column.name });
       if (column.type == "Date") {
         aoColumns.push({ "sClass": "Date ", "sTitle": column.name, });
@@ -162,27 +171,32 @@ SheetTable.prototype.setupTableHeaders = function( ) {
 }
 
 SheetTable.prototype.createEventsForCells = function( ) {
+  validator = new Vadidator(
+    new RegExp("^\\d{2}/\\d{2}/\\d{4}$"),
+    new RegExp("^\\d{1,15}$"),
+    new RegExp("^\\w{1,99}$")
+  );
   $('#sheet_field>div>').on('click', function (event) {
 
     var target = $( event.target );
 
     if (target.is('.Date') ) {
       tableElementManager.editCell(target,
-        new RegExp("^\\d{2}/\\d{2}/\\d{4}$"),
+        validator,
         tableElementManager.appendDatepickerElement );  
     }
     else if (target.is('.Char') ) {
       tableElementManager.editCell(target,
-        new RegExp("^\\w{1,99}$"),
+        validator,
         tableElementManager.appendInputElement);
     }
     else if (target.is('.Integer') ) {
       tableElementManager.editCell(target,
-        new RegExp("^\\d{1,15}$"),
+        validator,
         tableElementManager.appendInputElement);
     }
     else {
-      hideInput();
+      tableElementManager.hideInput();
     }
   } );
 
@@ -192,16 +206,38 @@ SheetTable.prototype.createEventsForCells = function( ) {
   // } );
 }
 
-SheetTable.prototype.create = function( sheet_schema, data, sheet_name ) {
-  this.prepHtml(sheet_name);
-  var dataSet = this.getDataSet(sheet_schema, data);
-  this.showTable(dataSet, sheet_schema);
-  this.showForm(dataSet, sheet_schema);
+SheetTable.prototype.create = function( data ) {
+  this.prepHtml();
+  var dataSet = this.getDataSet(data);
+  this.showTable(dataSet, this.sheet_schema);
+  this.showForm(dataSet, this.sheet_schema);
   this.addRow();
   this.setupTableHeaders();
   this.createEventsForCells();
 };
 
+Vadidator = function ( date, integer, char ) {
+  this.date = date;
+  this.integer = integer;
+  this.char = char;
+}
+
+Vadidator.prototype.validate = function ($cell) {
+  if ($cell.is('.Char')) {
+    reg_patt = this.char;
+  } else if ($cell.is('.Integer')) {
+    reg_patt = this.integer;
+  } else if ($cell.is('.Date')) {
+    reg_patt = this.date;
+  } else {
+    return false;
+  }
+  if (reg_patt.test($cell.find('#p_scnt')[0].value)) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 tableElementManager = {
 
@@ -212,8 +248,6 @@ tableElementManager = {
         '<input type="text" id="p_scnt" class="edit" size="20"' +
           'name="p_scnt_' + '"' +
           'value="'+ $cell.attr('data-value') +'" placeholder="" />' +
-        '</label> <a href="#" id="okScnt">Ok</a>' +
-        '</label> <a href="#" id="remScnt">Отмена</a>' +
       '</p>'
     )
     return $('#p_scnt')
@@ -226,8 +260,7 @@ tableElementManager = {
     } );
   },
 
-
-  editCell : function ($cell, reg_patt, input_type) {
+  editCell : function ($cell, validator, input_type) {
     tableElementManager.hideInput();
     $cell.attr('data-value', $cell.text());
     $cell.addClass('edit-hidden').text('');
@@ -235,30 +268,15 @@ tableElementManager = {
     $(".edit").on('click', function (e) {
       return false;
     } );
-    $("#okScnt").on('click', function (e) {
-      if (reg_patt.test($cell.find('#p_scnt')[0].value)){
-          tableElementManager.saveInput($cell, reg_patt);
-      }
-      return false;
-    } );
-    $("#remScnt").on('click', function (e) {
-      tableElementManager.hideInput();
-      return false;
-    } );
     $("#p_scnt").focus().val($cell.attr('data-value'));
-    return false;
-  },
-
-  saveInput : function ($cell, reg_patt) {
-    $('.edit-hidden').each( function( index ) {
-      $(this).text($cell.find('#p_scnt')[0].value);
-      $(this).removeClass('edit-hidden');
-    } );
     return false;
   },
 
   hideInput : function () {
     $('.edit-hidden').each( function( index ) {
+      if (validator.validate($(this))) {
+        $(this).attr('data-value', $(this).find('#p_scnt')[0].value);
+      };
       $(this).text($(this).attr('data-value'));
       $(this).removeClass('edit-hidden');
     } );
@@ -299,7 +317,8 @@ SheetList.prototype.hire = function() {
           } );
           $(this).addClass('strong');
           sheetTable = SheetTableSingleton.getInstance();
-          sheetTable.get_ajax_data(element.fields, element.sheet);
+          sheetTable.setTableData(element.fields, element.sheet);
+          sheetTable.get_ajax_data();
           return
         } );
     } );
