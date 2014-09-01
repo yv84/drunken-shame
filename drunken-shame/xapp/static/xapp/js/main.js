@@ -23,6 +23,7 @@ var ajax = (function ($) {
       });
     },
     post : function (data, callback) {
+      data.csrfmiddlewaretoken = csrf_token
       $.post(sheetUrl, data, function (data) {
         return callback(data);
       });
@@ -32,7 +33,8 @@ var ajax = (function ($) {
       $.ajax({
         headers : {
           'Accept' : 'application/json',
-          'Content-Type' : 'application/json'
+          'Content-Type' : 'application/json',
+          "X-CSRFToken" : csrf_token
         },
         url : sheetUrl + id,
         type : 'PATCH',
@@ -207,7 +209,7 @@ SheetTable.prototype.setupTableHeaders = function () {
 };
 
 SheetTable.prototype.createEventsForCells = function (validator, columnsId) {
-  
+
   $('#sheet_field>div>').on('click', function (event) {
 
     var target = $( event.target );
@@ -217,7 +219,7 @@ SheetTable.prototype.createEventsForCells = function (validator, columnsId) {
           validator,
           tableElementManager.appendDatepickerElement,
           columnsId
-        );  
+        );
     }
     else if (target.is('.Char') ) {
       tableElementManager.editCell(target,
@@ -328,7 +330,7 @@ var tableElementManager = {
           data[columnsId[$(this).index()]] = newValue.replace(
             new RegExp("^(\\d{2}).\(\\d{2}).\(\\d{4})$"), "$3-$2-$1");
         } else {
-          data[columnsId[$(this).index()]] = newValue          
+          data[columnsId[$(this).index()]] = newValue
         }
         ajax.patch(
           $cell.parent().children('.ID').text(),
