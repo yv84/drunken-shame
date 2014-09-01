@@ -34,6 +34,12 @@ MEDIA_ROOT = Path(os.environ['OPENSHIFT_DATA_DIR']).child('site_media')
 # Example: "/home/media/media.lawrence.com/static/"
 STATIC_ROOT = Path(os.environ['OPENSHIFT_DATA_DIR']).child('site_static')
 
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+
+STATICFILES_STORAGE = 'drunken-shame.s3utils.StaticRootS3BotoStorage'
+
 # add your own custom settings here
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False

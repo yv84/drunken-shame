@@ -47,6 +47,7 @@ INSTALLED_APPS = (
     'xapp',
     'rest_framework',
     'gunicorn',
+    'storages',
 )
 # if DEBUG:
 #     INSTALLED_APPS += ('debug_toolbar',)
@@ -110,12 +111,21 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# input static
+# STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder'
+ )
+# output static
+MEDIA_ROOT = os.path.join(BASE_DIR, '../site_media')
+STATIC_ROOT = os.path.join(BASE_DIR, '../site_static')
+
 
 TEMPLATE_DIRS = (
     os.path.join(BASE_DIR, 'templates'),
 )
 
-CRISPY_TEMPLATE_PACK = 'uni_form'
 
 REST_FRAMEWORK = {
     # Use hyperlinked styles by default.
