@@ -1,6 +1,11 @@
+# core project
 django==1.6
-django-crispy-forms==1.4.0
 South==1.0
 pyyaml
 djangorestframework
 django-filter
+psycopg2
+unipath
+
+# devops
+gunicorn

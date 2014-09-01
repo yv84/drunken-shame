@@ -46,9 +46,10 @@ INSTALLED_APPS = (
     'south',
     'xapp',
     'rest_framework',
+    'gunicorn',
 )
-if DEBUG:
-    INSTALLED_APPS += ('debug_toolbar',)
+# if DEBUG:
+#     INSTALLED_APPS += ('debug_toolbar',)
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
